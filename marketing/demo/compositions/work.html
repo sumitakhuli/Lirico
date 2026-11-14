@@ -1,0 +1,94 @@
+<template>
+  <style>
+    @font-face { font-family: "Segoe UI Variable Display"; src: local("Segoe UI Variable Display"), local("Segoe UI Variable"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif; }
+    #w-wall { position: absolute; inset: 0;
+      background: radial-gradient(1200px 700px at 78% 18%, rgba(126,224,195,0.16), transparent 60%),
+                  radial-gradient(900px 600px at 10% 90%, rgba(90,110,255,0.14), transparent 60%),
+                  linear-gradient(160deg, #161b29 0%, #0b0d12 100%); }
+    /* a stand-in app window: an editor someone is working in */
+    #w-win { position: absolute; left: 230px; top: 150px; width: 1460px; height: 720px; border-radius: 18px;
+      background: #12151d; border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 40px 120px rgba(0,0,0,0.55); overflow: hidden; }
+    #w-win .bar { height: 46px; background: #171b25; display: flex; align-items: center; gap: 10px; padding: 0 18px; }
+    #w-win .dot { width: 12px; height: 12px; border-radius: 50%; background: #2c3242; }
+    #w-win .tab { margin-left: 18px; height: 26px; width: 220px; border-radius: 8px; background: #222838; }
+    #w-win .tab.b { width: 170px; background: #1c2130; margin-left: 6px; }
+    .w-line { position: absolute; left: 70px; height: 14px; border-radius: 7px; background: #262c3b; }
+    .w-line.acc { background: #2f3a52; }
+    /* taskbar */
+    #w-task { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: rgba(20,23,31,0.92);
+      border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; gap: 18px; }
+    .w-ico { width: 38px; height: 38px; border-radius: 10px; background: #262b38; }
+    .w-ico.on { background: #313848; box-shadow: inset 0 -3px 0 #7ee0c3; }
+    #w-tray { position: absolute; right: 26px; bottom: 15px; width: 34px; height: 34px; }
+    /* the Lirico overlay, reproduced 1:1 from the app (shown at 2x) */
+    #w-ov { position: absolute; left: 50%; bottom: 86px; transform: translateX(-50%); }
+    .w-panel { position: relative; padding: 14px 34px 16px; border-radius: 28px; background: rgba(14,16,20,0.62);
+      font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; white-space: nowrap; }
+    .w-row { position: absolute; left: 0; right: 0; top: 14px; text-align: center; }
+    .w-lyric { font-size: 40px; font-weight: 600; color: #fff; text-shadow: 2px 2.4px 0 rgba(0,0,0,0.6); letter-spacing: 0; }
+    .w-status { font-size: 30px; font-weight: 500; color: rgba(255,255,255,0.75); padding-top: 6px; }
+    .w-status b { color: #7ee0c3; font-weight: 500; }
+    .w-ul { position: absolute; height: 4px; border-radius: 2px; background: #7ee0c3; left: 0; top: 58px; width: 0; }
+    #w-sizer { visibility: hidden; font-size: 40px; font-weight: 600; }
+    #w-head { position: absolute; left: 150px; top: 46px; }
+    #w-h1 { font-size: 64px; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
+    #w-h2 { font-size: 30px; font-weight: 400; color: rgba(255,255,255,0.62); margin-top: 6px; }
+  </style>
+  <div id="root" data-composition-id="work" data-width="1920" data-height="1080">
+    <div id="w-wall"></div>
+    <div id="w-win">
+      <div class="bar"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="tab"></div><div class="tab b"></div></div>
+      <div class="w-line acc" style="top:110px;width:420px"></div>
+      <div class="w-line" style="top:150px;width:880px"></div>
+      <div class="w-line" style="top:190px;width:760px"></div>
+      <div class="w-line" style="top:230px;width:940px"></div>
+      <div class="w-line acc" style="top:300px;width:360px"></div>
+      <div class="w-line" style="top:340px;width:820px"></div>
+      <div class="w-line" style="top:380px;width:690px"></div>
+      <div class="w-line" style="top:420px;width:900px"></div>
+      <div class="w-line" style="top:460px;width:540px"></div>
+      <div class="w-line acc" style="top:530px;width:300px"></div>
+      <div class="w-line" style="top:570px;width:780px"></div>
+    </div>
+    <div id="w-task">
+      <div class="w-ico"></div><div class="w-ico on"></div><div class="w-ico"></div><div class="w-ico"></div><div class="w-ico"></div>
+      <img id="w-tray" src="assets/logo.svg" alt="Lirico" />
+    </div>
+
+    <div id="w-ov" class="clip" data-start="0.6" data-duration="5.0" data-layout-allow-overflow data-layout-allow-overlap>
+      <div class="w-panel" id="w-panel">
+        <div id="w-sizer">City lights are humming low</div>
+        <div class="w-row w-status" id="w-r0">♪&nbsp; <b>Neon Monsoon</b> — Aria Vale</div>
+        <div class="w-row" id="w-r1"><span class="w-lyric" style="position:relative">City lights are humming low<span class="w-ul" id="w-u1"></span></span></div>
+        <div class="w-row" id="w-r2"><span class="w-lyric" style="position:relative">Every window turns to gold<span class="w-ul" id="w-u2"></span></span></div>
+      </div>
+    </div>
+
+    <div id="w-head" class="clip" data-start="0" data-duration="5.6">
+      <div id="w-h1">Lyrics, line by line.</div>
+      <div id="w-h2">Above your taskbar, over any app — for whatever is playing.</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    
+    tl.fromTo("#w-win", { y: 30, opacity: 0.5 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0);
+    tl.fromTo("#w-task", { y: 30 }, { y: 0, duration: 0.5, ease: "power3.out" }, 0);
+    tl.fromTo("#w-h1", { y: 24, opacity: 0.3 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0);
+    tl.fromTo("#w-h2", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0.25);
+    // overlay: title, then lines with the progress underline, slide-up between lines (app timings)
+    tl.fromTo("#w-panel", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 0.6);
+    
+    tl.fromTo("#w-r1", { opacity: 0, y: 8 }, { opacity: 0, y: 8, duration: 0.01 }, 0.6);
+    tl.fromTo("#w-r2", { opacity: 0, y: 8 }, { opacity: 0, y: 8, duration: 0.01 }, 0.6);
+    tl.to("#w-r0", { opacity: 0, y: -8, duration: 0.22, ease: "power3.out" }, 2.1);
+    tl.to("#w-r1", { opacity: 1, y: 0, duration: 0.22, ease: "power3.out" }, 2.1);
+    tl.fromTo("#w-u1", { width: "0%" }, { width: "100%", duration: 1.5, ease: "none" }, 2.2);
+    tl.to("#w-r1", { opacity: 0, y: -8, duration: 0.22, ease: "power3.out" }, 3.85);
+    tl.to("#w-r2", { opacity: 1, y: 0, duration: 0.22, ease: "power3.out" }, 3.85);
+    tl.fromTo("#w-u2", { width: "0%" }, { width: "100%", duration: 1.4, ease: "none" }, 3.95);
+    tl.to("#w-win", { scale: 0.985, duration: 5.6, ease: "none" }, 0);
+    window.__timelines["work"] = tl;
+  </script>
+</template>

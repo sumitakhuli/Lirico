@@ -1,0 +1,20 @@
+# environments & build outputs
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+preview/
+*.log
+
+# large files: the speech model is fetched by `python build_exe.py --get-model`,
+# the exe is published as a GitHub Release asset (GitHub rejects files > 100 MB)
+models/
+site/Lirico.exe
+
+# video project caches
+marketing/demo/.hyperframes/
+marketing/demo/renders/
+marketing/demo/node_modules/
+marketing/demo/.thumbnails/

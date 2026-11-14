@@ -1,0 +1,67 @@
+<template>
+  <style>
+    @font-face { font-family: "Segoe UI Variable Display"; src: local("Segoe UI Variable Display"), local("Segoe UI Variable"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif;
+      background: radial-gradient(1000px 600px at 50% 60%, rgba(126,224,195,0.10), transparent 65%), #0b0d12; }
+    #s-head { position: absolute; left: 0; right: 0; top: 120px; text-align: center; }
+    #s-h1 { font-size: 72px; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
+    #s-h2 { font-size: 32px; color: rgba(255,255,255,0.62); margin-top: 10px; }
+    #s-wave { position: absolute; left: 360px; right: 360px; top: 470px; height: 120px; display: flex; align-items: center; gap: 9px; }
+    .s-bar { flex: 1; border-radius: 6px; background: rgba(255,255,255,0.16); }
+    .s-bar.s-sing { background: rgba(126,224,195,0.55); }
+    #s-head-line { position: absolute; top: 450px; width: 3px; height: 160px; background: #fff; border-radius: 2px; left: 360px; box-shadow: 0 0 18px rgba(255,255,255,0.6); }
+    #s-tag { position: absolute; left: 0; right: 0; top: 640px; text-align: center; }
+    .s-pill { display: inline-flex; align-items: center; gap: 14px; padding: 12px 26px; border-radius: 40px;
+      font-size: 30px; font-weight: 500; position: absolute; left: 0; right: 0; margin: 0 auto; width: fit-content; white-space: nowrap; }
+    #s-p1 { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    #s-p2 { background: rgba(126,224,195,0.16); color: #7ee0c3; }
+    .s-dot { width: 14px; height: 14px; border-radius: 50%; background: #7ee0c3; }
+    #s-ov { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); }
+    .s-panel { position: relative; padding: 18px 44px 22px; border-radius: 34px; background: rgba(14,16,20,0.75);
+      border: 1px solid rgba(255,255,255,0.06); font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; white-space: nowrap; }
+    #s-sizer { visibility: hidden; font-size: 52px; font-weight: 600; }
+    .s-row { position: absolute; left: 0; right: 0; top: 18px; text-align: center; }
+    .s-status { font-size: 38px; font-weight: 500; color: rgba(255,255,255,0.75); padding-top: 8px; }
+    .s-status b { color: #7ee0c3; font-weight: 500; }
+    .s-lyric { position: relative; font-size: 52px; font-weight: 600; color: #fff; text-shadow: 2px 3px 0 rgba(0,0,0,0.6); }
+    .s-ul { position: absolute; left: 0; top: 74px; height: 5px; border-radius: 3px; background: #7ee0c3; width: 0; }
+  </style>
+  <div id="root" data-composition-id="sync" data-width="1920" data-height="1080">
+    <div id="s-head" class="clip" data-start="0" data-duration="4.6">
+      <div id="s-h1">Synced to the singer.</div>
+      <div id="s-h2">Video intro? Lirico listens and waits for the first sung word.</div>
+    </div>
+    <div id="s-wave" class="clip" data-start="0" data-duration="4.6"><div class="s-bar" style="height:14px"></div><div class="s-bar" style="height:24px"></div><div class="s-bar" style="height:17px"></div><div class="s-bar" style="height:23px"></div><div class="s-bar" style="height:19px"></div><div class="s-bar" style="height:22px"></div><div class="s-bar" style="height:21px"></div><div class="s-bar" style="height:20px"></div><div class="s-bar" style="height:23px"></div><div class="s-bar" style="height:18px"></div><div class="s-bar" style="height:24px"></div><div class="s-bar" style="height:15px"></div><div class="s-bar" style="height:24px"></div><div class="s-bar" style="height:15px"></div><div class="s-bar" style="height:24px"></div><div class="s-bar" style="height:18px"></div><div class="s-bar" style="height:23px"></div><div class="s-bar" style="height:20px"></div><div class="s-bar" style="height:21px"></div><div class="s-bar" style="height:22px"></div><div class="s-bar" style="height:19px"></div><div class="s-bar" style="height:23px"></div><div class="s-bar s-sing" style="height:54px"></div><div class="s-bar s-sing" style="height:79px"></div><div class="s-bar s-sing" style="height:61px"></div><div class="s-bar s-sing" style="height:72px"></div><div class="s-bar s-sing" style="height:107px"></div><div class="s-bar s-sing" style="height:83px"></div><div class="s-bar s-sing" style="height:42px"></div><div class="s-bar s-sing" style="height:54px"></div><div class="s-bar s-sing" style="height:46px"></div><div class="s-bar s-sing" style="height:51px"></div><div class="s-bar s-sing" style="height:66px"></div><div class="s-bar s-sing" style="height:105px"></div><div class="s-bar s-sing" style="height:91px"></div><div class="s-bar s-sing" style="height:45px"></div><div class="s-bar s-sing" style="height:82px"></div><div class="s-bar s-sing" style="height:69px"></div><div class="s-bar s-sing" style="height:42px"></div><div class="s-bar s-sing" style="height:50px"></div><div class="s-bar s-sing" style="height:83px"></div><div class="s-bar s-sing" style="height:83px"></div><div class="s-bar s-sing" style="height:47px"></div><div class="s-bar s-sing" style="height:98px"></div><div class="s-bar s-sing" style="height:95px"></div><div class="s-bar s-sing" style="height:53px"></div><div class="s-bar s-sing" style="height:49px"></div><div class="s-bar s-sing" style="height:47px"></div><div class="s-bar s-sing" style="height:62px"></div><div class="s-bar s-sing" style="height:45px"></div><div class="s-bar s-sing" style="height:95px"></div><div class="s-bar s-sing" style="height:104px"></div><div class="s-bar s-sing" style="height:59px"></div><div class="s-bar s-sing" style="height:66px"></div><div class="s-bar s-sing" style="height:68px"></div><div class="s-bar s-sing" style="height:41px"></div><div class="s-bar s-sing" style="height:40px"></div><div class="s-bar s-sing" style="height:74px"></div><div class="s-bar s-sing" style="height:93px"></div><div class="s-bar s-sing" style="height:57px"></div><div class="s-bar s-sing" style="height:74px"></div><div class="s-bar s-sing" style="height:94px"></div><div class="s-bar s-sing" style="height:63px"></div><div class="s-bar s-sing" style="height:38px"></div></div>
+    <div id="s-head-line" class="clip" data-start="0" data-duration="4.6"></div>
+    <div id="s-tag" class="clip" data-start="0" data-duration="4.6" data-layout-allow-overlap>
+      <div class="s-pill" id="s-p1"><span class="s-dot" id="s-pulse"></span>Listening for the singer…</div>
+      <div class="s-pill" id="s-p2">✓&nbsp; Synced</div>
+    </div>
+    <div id="s-ov" class="clip" data-start="0" data-duration="4.6" data-layout-allow-overflow data-layout-allow-overlap>
+      <div class="s-panel" id="s-panel">
+        <div id="s-sizer">Hands up while the bassline rolls</div>
+        <div class="s-row s-status" id="s-r0">♪&nbsp; <b>Neon Monsoon</b> — Aria Vale</div>
+        <div class="s-row" id="s-r1"><span class="s-lyric">Hands up while the bassline rolls<span class="s-ul" id="s-u1"></span></span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#s-h1", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.05);
+    tl.fromTo("#s-h2", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.2);
+    tl.fromTo(".s-bar", { scaleY: 0.2 }, { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: 0.008 }, 0.0);
+    // playhead walks across the quiet intro into the singing
+    tl.fromTo("#s-head-line", { x: 0 }, { x: 1196, duration: 4.4, ease: "none" }, 0.1);
+    tl.fromTo("#s-p1", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.4);
+    tl.fromTo("#s-pulse", { scale: 0.7, opacity: 0.6 }, { scale: 1.25, opacity: 1, duration: 0.45, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.4);
+    tl.fromTo("#s-p2", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.25);
+    tl.to("#s-p1", { opacity: 0, duration: 0.2 }, 2.2);
+    // the overlay holds the title through the intro, then the line lands with the singer
+    tl.fromTo("#s-panel", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.3);
+    tl.fromTo("#s-r1", { opacity: 0, y: 10 }, { opacity: 0, y: 10, duration: 0.01 }, 0.0);
+    tl.to("#s-r0", { opacity: 0, y: -10, duration: 0.22, ease: "power3.out" }, 2.3);
+    tl.to("#s-r1", { opacity: 1, y: 0, duration: 0.22, ease: "power3.out" }, 2.3);
+    tl.fromTo("#s-u1", { width: "0%" }, { width: "100%", duration: 1.9, ease: "none" }, 2.4);
+    window.__timelines["sync"] = tl;
+  </script>
+</template>
