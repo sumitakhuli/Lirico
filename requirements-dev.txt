@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest>=8
+pyinstaller>=6          # build_exe.py -> dist\Lirico.exe
+websocket-client>=1.6   # tools/yt_sync_probe.py, tools/yt_corpus.py (drive Chrome to measure sync)
+# for tools/fake_player.py (creates a test media session)
+winrt-Windows.Media>=2.0
+winrt-Windows.Media.Core>=2.0
+winrt-Windows.Media.Playback>=2.0
+winrt-Windows.Storage>=2.0

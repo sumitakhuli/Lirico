@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"
+  data-composition-variables='[{"id":"song","type":"string","label":"Song line","default":"Neon Monsoon — Aria Vale"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #0d0f15;
+        --ink: #ffffff;
+        --mint: #7ee0c3;
+        --font-display: "Outfit", sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { position: absolute; inset: 0; background: var(--ground); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14" data-width="1920" data-height="1080">
+      <div id="work" data-composition-id="work" data-composition-src="compositions/work.html"
+           data-start="0" data-duration="5.6" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080"></div>
+      <div id="sync" data-composition-id="sync" data-composition-src="compositions/sync.html"
+           data-start="5.6" data-duration="4.6" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080"></div>
+      <div id="endcard" data-composition-id="endcard" data-composition-src="compositions/endcard.html"
+           data-start="10.2" data-duration="3.8" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
