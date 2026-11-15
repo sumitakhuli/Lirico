@@ -8,7 +8,7 @@ Time-synced lyrics for whatever is playing on your Windows PC, line by line,
 <p align="center">
   <a href="https://getlirico.pages.dev/download?src=readme"><b>⬇ Download Lirico.exe</b></a> ·
   <a href="https://getlirico.pages.dev">Website</a> ·
-  <a href="https://github.com/sumitakhuli/Lirico/releases/latest/download/lirico-explainer.mp4">Watch the 25 s video (MP4)</a>
+  <a href="https://github.com/sumitakhuli/Lirico/releases/latest/download/lirico-explainer.mp4">Watch the 26 s video (MP4)</a>
 </p>
 
 Free, one file, Windows 10 / 11. No account, no setup.
@@ -16,9 +16,13 @@ Free, one file, Windows 10 / 11. No account, no setup.
 - **Finds the song by itself**: YouTube in Chrome/Edge, Spotify, any player in Windows' media controls.
 - **Lives in your taskbar's empty space**, also with auto-hide. Drag the lyrics near the taskbar,
   or next to a window's minimise button, and they **snap on like a magnet**.
+- **Attach to one app's title bar** (say VS Code): while you're in another app the lyrics wait in
+  the taskbar, and they jump back when you return. They never just vanish.
+- **Themes**: Classic (see-through), Glass, Neon, Pixel, Future and Cutie (pink underline with a
+  little flower or teddy riding it). Everything stays customisable on top.
 - **Sync first**: picks the lyrics version timed to the exact recording, and **listens for the singer**
   so music-video intros don't make lyrics start early.
-- Hindi songs in **English letters (Hinglish)** by default; Devanagari is one switch away.
+- Any language LRCLIB has. Hindi songs show in **English letters (Hinglish)** by default; Devanagari is one switch away.
 - Long lines wrap onto two balanced rows instead of being cut off.
 - Settings for font, size, colours, background, animations, hotkeys, with quick switches in the sidebar.
 - Starts with Windows and waits in the tray (turn off in Settings).
@@ -70,7 +74,7 @@ next time that video or song plays.
 
 ## Settings & customizing
 
-**Settings** (tray → Settings…) changes everything live: font, size, weight, colors, background
+**Settings** (tray → Settings…) changes everything live: theme, font, size, weight, colors, background
 color and opacity, corner radius, width, shadow, next line, the progress underline, animation style
 and speed, opacity while paused, fullscreen behavior, lock (click-through), start with Windows,
 "show lines early by", Hindi script, and hotkeys.

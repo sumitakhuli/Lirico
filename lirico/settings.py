@@ -34,7 +34,9 @@ class Settings:
     version: int = SETTINGS_VERSION
     overlay_visible: bool = True
     position: Optional[list] = None     # [x, y] top-left when floating; None = just above the taskbar
-    position_mode: str = "taskbar"      # "taskbar" = in the taskbar's free space, "float" = anywhere
+    position_mode: str = "taskbar"      # "taskbar" = in the taskbar's free space, "titlebar", "float" = anywhere
+    titlebar_app: str = ""              # exe of the window the lyrics are attached to (title-bar mode)
+    theme_preset: str = "classic"       # theme.PRESETS key; `theme` holds the user's tweaks on top
     autostart_setup: bool = False       # first-run "start with Windows" has been applied
     telemetry: bool = True              # anonymous usage counts (Settings -> Behavior to turn off)
     telemetry_notice: bool = False      # the one-time "we share anonymous counts" note was shown
@@ -43,7 +45,7 @@ class Settings:
     lead: float = 0.15                  # show every line this many seconds early (reading time)
     offsets: dict = field(default_factory=dict)   # per-song extra offset, seconds
     pins: dict = field(default_factory=dict)      # per-song chosen LRCLIB id
-    theme: dict = field(default_factory=dict)     # overrides of theme.THEME
+    theme: dict = field(default_factory=dict)     # overrides of the preset (theme.make_theme)
     hotkeys: dict = field(default_factory=dict)   # action -> shortcut ("" = disabled)
     auto_sync: bool = True              # listen to the music to find where the singing starts
     wait_for_singer: bool = True        # until synced, show the title instead of (early) lyrics

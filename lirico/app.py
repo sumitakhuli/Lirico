@@ -24,7 +24,7 @@ from .media_watch import MediaSnapshot, MediaWatcher
 from .overlay import GAP, INTRO, LYRIC, STATUS, Overlay
 from .paths import cache_dir, config_dir, speech_model_dir
 from .settings import HOTKEY_ACTIONS, Settings
-from .theme import THEME, Theme
+from .theme import PRESETS, Theme, base_theme, make_theme
 from .title_clean import CleanTrack, clean_track
 from .tray import Tray
 
@@ -54,7 +54,7 @@ class Controller(QObject):
     def __init__(self, app: QApplication, settings: Settings):
         super().__init__()
         self.app, self.settings = app, settings
-        self.theme: Theme = THEME.with_overrides(settings.theme)
+        self.theme: Theme = make_theme(settings.theme_preset, settings.theme)
 
         self.overlay = Overlay(self.theme, click_through=settings.click_through)
         pos = settings.position
@@ -62,8 +62,9 @@ class Controller(QObject):
         self.overlay.moved.connect(self._on_moved)
         from .taskbar_dock import TaskbarDock, TitleBarDock
         self.dock = TaskbarDock()
-        self.titlebar = TitleBarDock()
+        self.titlebar = TitleBarDock(settings.titlebar_app)
         self._snap_kind: Optional[str] = None
+        self._snap_hwnd: Optional[int] = None
         self.overlay.set_snap_provider(self._snap_target)
         self.dock_timer = QTimer(self, interval=400)
         self.dock_timer.timeout.connect(self._update_dock)
@@ -469,10 +470,19 @@ class Controller(QObject):
     def _on_moved(self, pos: QPoint) -> None:
         """Drag finished: attach to the magnet it was pulled onto, else float there."""
         kind, self._snap_kind = self._snap_kind, None
-        if kind in ("taskbar", "titlebar"):
+        if kind == "titlebar" and self._snap_hwnd and self.titlebar.attach(self._snap_hwnd):
+            self._remember_titlebar_app()
+            changed = self.settings.position_mode != "titlebar"
+            self.settings.position_mode = "titlebar"
+            self.settings.save()
+            self._update_dock()
+            if changed:
+                self._flash("Attached to this window · in other apps they wait in the taskbar", 2.6)
+            return
+        if kind == "taskbar":
             if kind != self.settings.position_mode:
                 self.set_position_mode(kind)
-                self._flash("Attached to the taskbar" if kind == "taskbar" else "Attached to the title bar", 1.6)
+                self._flash("Attached to the taskbar", 1.6)
             else:
                 self._update_dock()          # snap back into place
             return
@@ -490,7 +500,7 @@ class Controller(QObject):
 
     def _snap_target(self, center: QPoint):
         """While dragging: the rect the lyrics should pull onto, or None."""
-        self._snap_kind = None
+        self._snap_kind, self._snap_hwnd = None, None
         try:
             from .taskbar_dock import taskbar_state
             st = taskbar_state()
@@ -499,11 +509,12 @@ class Controller(QObject):
                 if gap is not None:
                     self._snap_kind = "taskbar"
                     return gap
-            slot = self.titlebar.target(self.theme.box_width, (int(self.overlay.winId()),))
+            hwnd = self.titlebar.window_at(center.x(), center.y())
+            slot = self.titlebar.slot(hwnd, self.theme.box_width) if hwnd else None
             if slot is not None:
                 dx, dy = center.x() - slot.center().x(), center.y() - slot.center().y()
                 if abs(dy) <= self.SNAP_TITLEBAR * 0.6 and abs(dx) <= self.SNAP_TITLEBAR + slot.width() / 2:
-                    self._snap_kind = "titlebar"
+                    self._snap_kind, self._snap_hwnd = "titlebar", hwnd
                     return slot
         except Exception:
             log.exception("snap target failed")
@@ -512,24 +523,46 @@ class Controller(QObject):
     # ------------------------------------------------------------------ taskbar dock
     def _update_dock(self) -> None:
         mode = self.settings.position_mode
+        try:
+            self.titlebar.poll()             # remember the app window you use, for "attach to title bar"
+        except Exception:
+            log.exception("foreground poll failed")
         if mode not in ("taskbar", "titlebar") or self.overlay._drag_offset is not None:
             if mode == "float" and self.overlay.docked:
                 self.overlay.set_dock(None)
             return
+        rect, on_taskbar = None, True
         try:
-            if mode == "taskbar":
+            if mode == "titlebar":
+                # In the attached window's title bar while you use it; in the
+                # taskbar meanwhile (back on top as soon as you return).
+                rect = self.titlebar.target(self.theme.box_width)
+                on_taskbar = rect is None
+                if self.titlebar.app and self.titlebar.app != self.settings.titlebar_app:
+                    self._remember_titlebar_app()
+            if on_taskbar:
                 rect = self.dock.target(self.theme.box_width)
-            else:   # follows the active window as you switch apps
-                rect = self.titlebar.target(self.theme.box_width, (int(self.overlay.winId()),))
         except Exception:
             log.exception("dock failed")
             rect = None
+        self.overlay.set_light_surface(on_taskbar and self.dock.light)
         self.overlay.set_dock(rect)          # None: no room -> float just above the taskbar
         if rect is not None:
             self.overlay.raise_above_taskbar()  # the taskbar climbs above us when clicked
 
+    def _remember_titlebar_app(self) -> None:
+        self.settings.titlebar_app = self.titlebar.app
+        self.settings.save()
+
     def set_position_mode(self, mode: str) -> None:
-        self.settings.position_mode = mode if mode in ("taskbar", "titlebar", "float") else "float"
+        mode = mode if mode in ("taskbar", "titlebar", "float") else "float"
+        if mode == "titlebar":
+            if self.titlebar.attach():         # the app window you used last
+                self._remember_titlebar_app()
+                self._flash("Attached to the title bar of the window you used last", 2.4)
+            elif self.titlebar.anchor is None:
+                self._flash("Click the window you want, or drag the lyrics onto its title bar", 2.8)
+        self.settings.position_mode = mode
         self.settings.save()
         if mode == "float":
             self.overlay.set_dock(None)
@@ -630,8 +663,17 @@ class Controller(QObject):
         self.theme = theme
         self.overlay.apply_theme(theme)
         if save:
-            self.settings.theme = theme.diff(THEME)
+            self.settings.theme = theme.diff(base_theme(self.settings.theme_preset))
             self.settings.save()
+
+    def set_preset(self, name: str) -> None:
+        """Switch to a ready-made look (drops the tweaks made on the old one)."""
+        if name not in PRESETS:
+            return
+        self.settings.theme_preset, self.settings.theme = name, {}
+        self.settings.save()
+        self.theme = base_theme(name)
+        self.overlay.apply_theme(self.theme)
 
     def set_click_through(self, enabled: bool) -> None:
         self.settings.click_through = bool(enabled)

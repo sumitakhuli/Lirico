@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ctypes
 import logging
+import os
 import time
 from ctypes import wintypes
 from dataclasses import dataclass
@@ -118,6 +119,7 @@ class TaskbarDock:
         self._last_scan = 0.0
         self._last_rect: Optional[QRect] = None
         self._shown_since = 0.0
+        self.light = False         # the taskbar is light (Windows light mode)
 
     def target(self, max_width: int) -> Optional[QRect]:
         """Rect for the docked lyrics, or None to float (no taskbar / no room)."""
@@ -155,6 +157,7 @@ class TaskbarDock:
             return
         buf = np.frombuffer(img.constBits(), dtype=np.uint8, count=bpl * h).reshape(h, bpl)[:, :w]
         scale = w / max(1, r.width())
+        self.light = float(buf.mean()) > 150
         gaps = find_gaps(buf, scale)
         if not gaps:
             self._miss()
@@ -182,16 +185,32 @@ class TaskbarDock:
 
 
 # --------------------------------------------------------------------------- title bar
-# The empty strip of the active window's title bar, just left of its
-# minimise / maximise / close buttons.
+# The lyrics attach to ONE window's title bar (say VS Code), in the empty
+# strip left of its minimise / maximise / close buttons. While you work in
+# another app they visit the taskbar; when that window is active again they
+# go back to its title bar. They never just disappear.
 
 _dwmapi = ctypes.windll.dwmapi
+_kernel32 = ctypes.windll.kernel32
 _user32.GetForegroundWindow.restype = wintypes.HWND
 _user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+_user32.GetAncestor.restype = wintypes.HWND
+_user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+_user32.GetTopWindow.restype = wintypes.HWND
+_user32.GetTopWindow.argtypes = [wintypes.HWND]
+_user32.GetWindow.restype = wintypes.HWND
+_user32.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
+_user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+_kernel32.OpenProcess.restype = wintypes.HANDLE
+_kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR,
+                                                 ctypes.POINTER(wintypes.DWORD)]
 _SKIP_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "NotifyIconOverflowWindow",
-                 "Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow", "TopLevelWindowForOverflowXamlIsland"}
-DWMWA_CAPTION_BUTTON_BOUNDS, DWMWA_EXTENDED_FRAME_BOUNDS = 5, 9
-MIN_TITLE_SLOT = 170     # logical px
+                 "Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow", "TopLevelWindowForOverflowXamlIsland",
+                 "TaskListThumbnailWnd", "ForegroundStaging", "MultitaskingViewFrame"}
+DWMWA_CAPTION_BUTTON_BOUNDS, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWA_CLOAKED = 5, 9, 14
+GA_ROOTOWNER, GW_HWNDNEXT = 3, 2
+MIN_TITLE_SLOT = 150     # logical px
+_OWN_PID = os.getpid()
 
 
 def _dwm_rect(hwnd, attr) -> Optional[_RECT]:
@@ -204,72 +223,162 @@ def _dwm_rect(hwnd, attr) -> Optional[_RECT]:
     return None
 
 
-def _usable_window(hwnd, ignore: tuple) -> bool:
-    if not hwnd or int(hwnd) in ignore or not _user32.IsWindowVisible(hwnd) or _user32.IsIconic(hwnd):
+def _pid(hwnd) -> int:
+    pid = wintypes.DWORD()
+    _user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    return pid.value
+
+
+def exe_name(hwnd) -> str:
+    """'Code.exe' for a VS Code window ('' if unknown)."""
+    h = _kernel32.OpenProcess(0x1000, False, _pid(hwnd))     # PROCESS_QUERY_LIMITED_INFORMATION
+    if not h:
+        return ""
+    try:
+        buf = ctypes.create_unicode_buffer(520)
+        n = wintypes.DWORD(520)
+        if _kernel32.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(n)):
+            return os.path.basename(buf.value)
+        return ""
+    finally:
+        _kernel32.CloseHandle(h)
+
+
+def _cloaked(hwnd) -> bool:
+    v = wintypes.DWORD()
+    try:
+        _dwmapi.DwmGetWindowAttribute(wintypes.HWND(hwnd), DWMWA_CLOAKED, ctypes.byref(v), ctypes.sizeof(v))
+    except Exception:
+        return False
+    return bool(v.value)
+
+
+def _usable_window(hwnd) -> bool:
+    """A normal app window (not ours, not the shell, not hidden or minimised)."""
+    if not hwnd or not _user32.IsWindowVisible(hwnd) or _user32.IsIconic(hwnd):
+        return False
+    if _pid(hwnd) == _OWN_PID or _cloaked(hwnd):
+        return False
+    ex = _user32.GetWindowLongW(hwnd, -20)                   # GWL_EXSTYLE
+    if ex & 0x80 or ex & 0x08000000:                         # tool windows, no-activate popups
+        return False
+    if _user32.GetWindowTextLengthW(hwnd) == 0:              # untitled helper windows
+        return False
+    r = _RECT()
+    if not _user32.GetWindowRect(hwnd, ctypes.byref(r)) or r.right - r.left < 300 or r.bottom - r.top < 120:
         return False
     buf = ctypes.create_unicode_buffer(80)
     _user32.GetClassNameW(hwnd, buf, 80)
     return buf.value not in _SKIP_CLASSES
 
 
+def _root(hwnd) -> int:
+    r = _user32.GetAncestor(hwnd, GA_ROOTOWNER) if hwnd else None
+    return int(r or hwnd or 0)
+
+
 class TitleBarDock:
-    """Finds a slot in the foreground window's title bar, left of its buttons,
-    and follows the active window as you switch apps."""
+    """Remembers the window the lyrics are attached to and finds the free slot
+    in its title bar."""
 
-    def __init__(self):
-        self._hwnd = None
-        self._slot: Optional[QRect] = None
-        self._last_scan = 0.0
-        self._last_key = None
+    def __init__(self, app: str = ""):
+        self.anchor: Optional[int] = None    # attached window (this session)
+        self.app = app                       # its exe, remembered across restarts
+        self.active = 0                      # last app window you used (not ours)
+        self._raw_fg = None
+        self._slots: dict = {}               # hwnd -> (key, time, slot)
 
-    def target(self, width: int, ignore: tuple = (), scan: bool = True) -> Optional[QRect]:
+    # -- which window ---------------------------------------------------------
+    def poll(self) -> None:
+        """Track the window you're using. Only real changes count, so a window we
+        just attached to stays 'active' until you switch to another one."""
         fg = _user32.GetForegroundWindow()
-        if _usable_window(fg, ignore):
-            hwnd = int(fg)
-        elif self._hwnd and _user32.IsWindow(self._hwnd) and _usable_window(self._hwnd, ignore):
-            hwnd = self._hwnd          # desktop/taskbar focused: stay on the last window
-        else:
+        fg = int(fg) if fg else 0
+        if fg == self._raw_fg:
+            return
+        self._raw_fg = fg
+        root = _root(fg)
+        if _usable_window(root):
+            self.active = root
+            if self.anchor is None and self.app and exe_name(root).lower() == self.app.lower():
+                self.anchor = root          # after a restart: re-attach to the same app
+
+    def attach(self, hwnd: Optional[int] = None) -> bool:
+        """Attach to `hwnd` (default: the window you used last)."""
+        hwnd = _root(hwnd or self.active)
+        if not hwnd or not _usable_window(hwnd):
+            return False
+        self.anchor, self.active = hwnd, hwnd
+        self.app = exe_name(hwnd)
+        return True
+
+    def window_at(self, x: int, y: int) -> Optional[int]:
+        """Top-most app window whose frame (or the band just above it) holds the
+        point, in logical px."""
+        dpr = QGuiApplication.primaryScreen().devicePixelRatio() or 1.0
+        px, py = x * dpr, y * dpr
+        h = _user32.GetTopWindow(None)
+        for _ in range(600):
+            if not h:
+                break
+            if _usable_window(h):
+                f = _dwm_rect(h, DWMWA_EXTENDED_FRAME_BOUNDS)
+                if f is not None and f.left <= px < f.right and f.top - 40 * dpr <= py < f.bottom:
+                    return int(h)
+            h = _user32.GetWindow(h, GW_HWNDNEXT)
+        return None
+
+    # -- where ----------------------------------------------------------------
+    def target(self, width: int) -> Optional[QRect]:
+        """The title-bar slot while the attached window is the one in use;
+        None otherwise (the caller shows the lyrics in the taskbar meanwhile)."""
+        self.poll()
+        if self.anchor is not None and not _user32.IsWindow(self.anchor):
+            self.anchor = None                # closed: wait for the app to come back
+            self.poll()
+        if self.anchor is None or self.active != self.anchor or not _usable_window(self.anchor):
             return None
+        return self.slot(self.anchor, width)
+
+    def slot(self, hwnd: int, width: int) -> Optional[QRect]:
         frame = _dwm_rect(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS)
         win = _RECT()
-        if frame is None and not _user32.GetWindowRect(hwnd, ctypes.byref(win)):
+        if not _user32.GetWindowRect(hwnd, ctypes.byref(win)):
             return None
         if frame is None:
             frame = win
-        _user32.GetWindowRect(hwnd, ctypes.byref(win))
-        screen = QGuiApplication.primaryScreen()
-        dpr = screen.devicePixelRatio() or 1.0
+        dpr = QGuiApplication.primaryScreen().devicePixelRatio() or 1.0
         caps = _dwm_rect(hwnd, DWMWA_CAPTION_BUTTON_BOUNDS)
         if caps is not None and caps.right > caps.left and caps.bottom > caps.top:
             # caption bounds are relative to the window rect
             # (maximised windows overhang the screen: clip to the visible frame)
-            bx = win.left + caps.left
+            bx = min(win.left + caps.left, frame.right - int(100 * dpr))
             by = max(win.top + caps.top, frame.top)
             bh = win.top + caps.bottom - by
         else:   # apps that draw their own title bar (Chrome, VS Code...): standard size
-            bw = int(138 * dpr)
-            bx, by, bh = frame.right - bw, frame.top, int(32 * dpr)
+            bx, by, bh = frame.right - int(138 * dpr), frame.top, int(32 * dpr)
         bh = max(int(26 * dpr), min(bh, int(48 * dpr)))
-        right = bx - int(10 * dpr)
+        right = bx - int(6 * dpr)
         if right - frame.left < MIN_TITLE_SLOT * dpr:
             return None
-        key = (hwnd, frame.left, frame.top, frame.right, right)
+        key = (frame.left, frame.top, frame.right, right, width)
         now = time.monotonic()
-        if scan and (key != self._last_key or now - self._last_scan > 2.0):
-            self._last_key, self._last_scan, self._hwnd = key, now, hwnd
-            self._slot = self._scan(right, by, bh, width, dpr, frame.left)
-        elif not scan:
-            self._hwnd = hwnd
-            w = int(width * dpr)
-            return QRect(round((right - w) / dpr), round(by / dpr), width, round(bh / dpr))
-        return self._slot
+        cached = self._slots.get(hwnd)
+        if cached is not None and cached[0] == key and now - cached[1] < 2.0:
+            return cached[2]
+        found = self._scan(right, by, bh, width, dpr, frame.left)
+        if len(self._slots) > 32:
+            self._slots.clear()
+        self._slots[hwnd] = (key, now, found)
+        return found
 
     def _scan(self, right: int, top: int, h: int, width: int, dpr: float, left_limit: int) -> Optional[QRect]:
-        """Free run of title bar ending right next to the buttons (physical px in, logical out)."""
-        w = min(int(width * dpr), right - left_limit)
+        """Widest free run of title bar near the buttons, e.g. between Chrome's
+        last tab and its buttons (physical px in, logical out)."""
+        look = min(int((width + 160) * dpr), right - left_limit)
+        x0 = right - look
         screen = QGuiApplication.primaryScreen()
-        x0 = right - w
-        pix = screen.grabWindow(0, round(x0 / dpr), round(top / dpr), round(w / dpr), round(h / dpr))
+        pix = screen.grabWindow(0, round(x0 / dpr), round(top / dpr), round(look / dpr), round(h / dpr))
         img = pix.toImage().convertToFormat(QImage.Format_Grayscale8)
         iw, ih, bpl = img.width(), img.height(), img.bytesPerLine()
         if iw < 20 or ih < 8:
@@ -277,14 +386,21 @@ class TitleBarDock:
         g = np.frombuffer(img.constBits(), dtype=np.uint8, count=bpl * ih).reshape(ih, bpl)[:, :iw]
         band = g[int(ih * 0.2): int(ih * 0.8)].astype(np.float32)
         busy = (band.std(axis=0) + np.abs(np.diff(band.mean(axis=0), prepend=band[:, :1].mean())) * 0.6) > 6.0
-        # walk left from the buttons until something occupies the title bar
-        free = 0
-        for x in range(iw - 1, -1, -1):
-            if busy[x]:
-                break
-            free += 1
-        free_logical = (free / (iw / (w / dpr))) - 8
-        if free_logical < MIN_TITLE_SLOT:
+        scale = iw / (look / dpr)                     # captured px per logical px
+        pad = max(1, int(6 * scale))
+        busy = np.convolve(busy.astype(np.float32), np.ones(2 * pad + 1), mode="same") > 0
+        best = None
+        start = None
+        for x, b in enumerate(list(busy) + [True]):
+            if not b and start is None:
+                start = x
+            elif b and start is not None:
+                if (x - start) / scale >= MIN_TITLE_SLOT:
+                    best = (start, x)                 # keep the right-most big enough run
+                start = None
+        if best is None:
             return None
-        slot_w = int(min(width, free_logical))
-        return QRect(round(right / dpr) - slot_w, round(top / dpr), slot_w, round(h / dpr))
+        a, b = best
+        slot_w = int(min(width, (b - a) / scale))
+        right_l = round(x0 / dpr + b / scale)
+        return QRect(right_l - slot_w, round(top / dpr), slot_w, round(h / dpr))

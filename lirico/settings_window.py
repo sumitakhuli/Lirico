@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDoubleSpinBo
                                QPushButton, QScrollArea, QSlider, QStackedWidget, QVBoxLayout, QWidget)
 
 from .settings import HOTKEY_ACTIONS
-from .theme import THEME, Theme
+from .theme import PRESETS, THEME, Theme, base_theme
 
 if TYPE_CHECKING:  # pragma: no cover
     from .app import Controller
@@ -116,7 +116,7 @@ class SettingsWindow(QWidget):
 
         quick("Show lyrics", lambda: st.overlay_visible,
               lambda on: (setattr(st, "overlay_visible", bool(on)), st.save()))
-        quick("Stick to taskbar", lambda: st.position_mode == "taskbar",
+        quick("Stick to taskbar", lambda: st.position_mode != "float",
               lambda on: ctl.set_position_mode("taskbar" if on else "float"))
         quick("Auto-sync", lambda: st.auto_sync, ctl.set_auto_sync)
         quick("Start with Windows", ctl.autostart_enabled, ctl.set_autostart)
@@ -161,9 +161,9 @@ class SettingsWindow(QWidget):
         lay.addWidget(row)
 
     def _set_theme(self, **changes) -> None:
-        self.theme = replace(self.theme, **changes)
+        self.theme = replace(self.ctl.theme, **changes)
         self.ctl.apply_theme(self.theme, save=False)
-        self.ctl.settings.theme = self.theme.diff(THEME)
+        self.ctl.settings.theme = self.theme.diff(base_theme(self.ctl.settings.theme_preset))
         self._save_timer.start()
 
     def _slider(self, field: str, lo: float, hi: float, step: float = 1.0, fmt: str = "{:.0f}",
@@ -250,6 +250,21 @@ class SettingsWindow(QWidget):
 
     # ------------------------------------------------------------------ pages
     def _build_appearance(self, lay: QVBoxLayout) -> None:
+        st = self.ctl.settings
+
+        def pick_preset(name):
+            self.ctl.set_preset(name)
+            self.theme = self.ctl.theme
+            self._refresh_all()
+
+        self._row(lay, "Theme", self._combo([(label, key) for key, (label, _) in PRESETS.items()],
+                                            lambda: st.theme_preset, pick_preset),
+                  "A ready-made look. Everything below still fine-tunes it")
+        self._row(lay, "Little extras", self._combo(
+            [("None", ""), ("Flowers & teddies 🌸🧸", "🌸 🧸 🎀 💗 🌷"), ("Stars ✨", "✨ ⭐ 💫"),
+             ("Hearts 💗", "💗 💖 💕"), ("Music 🎵", "🎵 🎶 🎧")],
+            lambda: self.theme.deco_glyphs, lambda v: self._set_theme(deco_glyphs=v)),
+                  "A tiny picture rides the underline")
         font = QFontComboBox()
         font.setFixedWidth(240)
         font.setCurrentFont(QFont(self.theme.font_family))
@@ -271,11 +286,21 @@ class SettingsWindow(QWidget):
                   "Fixed width of the floating lyrics box; long lines wrap inside it")
         self._row(lay, "Max rows per line", self._slider("max_lines", 1, 3, 1))
         self._row(lay, "Text shadow", self._theme_toggle("shadow"))
+        self._row(lay, "Neon glow", self._theme_toggle("text_glow"))
+        self._row(lay, "Capital letters", self._theme_toggle("uppercase"))
+        self._row(lay, "Letter spacing", self._slider("letter_spacing", 0, 20, 1, "{:.0f}%"))
+        self._row(lay, "Smooth edges", self._theme_toggle("font_antialias"), "Off gives a crisp pixel look")
+        self._row(lay, "Dark text on a light taskbar", self._theme_toggle("adapt_to_taskbar"),
+                  "With a see-through background, keeps lyrics readable on light taskbars")
         self._row(lay, "Show next line", self._theme_toggle("show_next_line"))
         self._row(lay, "Highlight sung words", self._combo(
             [("Moving word", "word"), ("Underline", "underline"), ("Off", "off")],
             lambda: self.theme.highlight, lambda v: self._set_theme(highlight=v)),
             "Shows exactly which word is being sung")
+        self._row(lay, "Underline style", self._combo(
+            [("Line", "line"), ("Glow", "glow"), ("Pixel blocks", "blocks")],
+            lambda: self.theme.underline_style, lambda v: self._set_theme(underline_style=v)))
+        self._row(lay, "Underline thickness", self._slider("underline_thickness", 1, 6, 0.5, "{:.1f} px"))
         self._row(lay, "Highlight strength", self._slider("highlight_strength", 0, 80, 5, "{:.0f}%", scale=100))
         self._row(lay, "Other words", self._slider("unsung_opacity", 20, 100, 5, "{:.0f}%", scale=100),
                   "Brightness of the words around the highlighted one")
@@ -442,7 +467,7 @@ class SettingsWindow(QWidget):
         self.show_hotkey_errors(errors)
 
     def _reset_theme(self) -> None:
-        self.theme = THEME
+        self.theme = base_theme(self.ctl.settings.theme_preset)
         self.ctl.apply_theme(self.theme, save=False)
         self.ctl.settings.theme = {}
         self.ctl.settings.save()

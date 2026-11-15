@@ -39,13 +39,15 @@
   .brand i { color: var(--pink); font-style: normal; }
   .get { text-decoration: none; font-family: var(--pop); font-weight: 800; font-size: 16px; padding: 10px 16px; border-radius: 14px;
          background: var(--sun); border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); transition: transform .12s, box-shadow .12s; }
+  .get svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
   .get:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
 
   /* hero */
-  .hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 60px); align-items: center; padding-top: clamp(28px, 6vh, 64px); padding-bottom: 56px; }
+  .hero { display: grid; grid-template-columns: minmax(0, .74fr) minmax(0, 1.26fr); gap: clamp(28px, 3.4vw, 56px); align-items: center; padding-top: clamp(20px, 4vh, 48px); padding-bottom: 64px; }
+  .wrap.hero, header .wrap { max-width: 1440px; }
   .tag { display: inline-block; font-family: var(--hand); font-size: 22px; background: var(--mint); border: 2.5px solid var(--ink);
          padding: 3px 14px; border-radius: 999px; transform: rotate(-3deg); box-shadow: var(--sh-sm); }
-  h1 { font-family: var(--pop); font-weight: 800; font-size: clamp(50px, 7.4vw, 108px); line-height: .9; letter-spacing: -.055em; margin-top: 22px; }
+  h1 { font-family: var(--pop); font-weight: 800; font-size: clamp(46px, 5.5vw, 92px); line-height: .92; letter-spacing: -.055em; margin-top: 22px; }
   h1 .hl { position: relative; white-space: nowrap; z-index: 0; }
   h1 .hl::before { content: ""; position: absolute; z-index: -1; left: -.08em; right: -.08em; top: .52em; bottom: .02em; background: var(--pink);
                    transform: rotate(-1.5deg) scaleX(0); transform-origin: left; animation: swipe .7s .5s cubic-bezier(.6,0,.2,1) forwards; border-radius: 6px; }
@@ -110,6 +112,8 @@
   .ticker div { display: flex; width: max-content; gap: 34px; padding: 14px 0; font-family: var(--pop); font-weight: 800; font-size: 26px; animation: tick 22s linear infinite; }
   .ticker span:nth-child(4n+1) { color: var(--sun); } .ticker span:nth-child(4n+2) { color: var(--mint); }
   .ticker span:nth-child(4n+3) { color: var(--pink); } .ticker span:nth-child(4n) { color: var(--sky); }
+  .ticker .lg { width: 1.05em; height: 1.05em; vertical-align: -0.16em; margin-right: 6px; }
+  .ticker span { white-space: nowrap; }
   @keyframes tick { to { transform: translateX(-50%); } }
 
   /* sections */
@@ -183,6 +187,7 @@
     .step:nth-child(2) { transform: rotate(1.5deg); }
     .vinyl { width: 110px; height: 110px; right: -10px; top: -40px; }
     .try { left: 0; }
+    .floaty { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -195,7 +200,7 @@
 <header>
   <div class="wrap bar">
     <a class="brand" href="#top"><img src="assets/logo.svg" alt="" /><span>lirico<i>.</i></span></a>
-    <a class="get" href="#get">Get it ↓</a>
+    <a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download · free</a>
   </div>
 </header>
 
@@ -241,8 +246,8 @@
   </div>
 
   <div class="ticker" aria-hidden="true"><div>
-    <span>♪ YouTube</span><span>✦ Spotify</span><span>✦ literally any app</span><span>✦ Hinglish</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
-    <span>♪ YouTube</span><span>✦ Spotify</span><span>✦ literally any app</span><span>✦ Hinglish</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
+    <span><svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg> YouTube</span><span><svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1ED760" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Spotify</span><span>✦ literally any app</span><span>✦ every language</span><span>✦ neon · pixel · cutie</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
+    <span><svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg> YouTube</span><span><svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1ED760" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Spotify</span><span>✦ literally any app</span><span>✦ every language</span><span>✦ neon · pixel · cutie</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
   </div></div>
 
   <section class="wrap reveal" id="how">
@@ -256,20 +261,20 @@
   </section>
 
   <section class="wrap reveal" id="watch">
-    <h2 data-lyric="25 seconds of proof.">25 seconds <span class="m">of proof.</span></h2>
+    <h2 data-lyric="26 seconds of proof.">26 seconds <span class="m">of proof.</span></h2>
     <p class="hand">no sound needed, it's literally about reading</p>
-    <div class="screen"><video src="assets/lirico-explainer.mp4" poster="assets/poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Lirico in 25 seconds"></video></div>
+    <div class="screen"><video src="assets/lirico-explainer.mp4" poster="assets/poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Lirico in 26 seconds"></video></div>
   </section>
 
   <section class="wrap reveal" id="stuff">
     <h2 data-lyric="Little things we're proud of.">Little things we're <span class="l">proud of.</span></h2>
     <div class="stickers">
-      <div class="st sticker"><div class="e">🧲</div><div><b>Snaps like a magnet</b><span>Drag it to the taskbar or next to any window's buttons. Click. Stuck.</span></div></div>
-      <div class="st sticker"><div class="e">🎯</div><div><b>Right on the beat</b><span>Skip, pause, rewind. It keeps up.</span></div></div>
-      <div class="st sticker"><div class="e">🌶️</div><div><b>Hinglish? Obviously.</b><span>Hindi songs in English letters. Devanagari if you like.</span></div></div>
-      <div class="st sticker"><div class="e">🎨</div><div><b>Your vibe, your colours</b><span>Fonts, sizes, colours, little animations.</span></div></div>
+      <div class="st sticker"><div class="e">🧲</div><div><b>Snaps like a magnet</b><span>Into the taskbar or any app's title bar. Switch apps and it waits in the taskbar, then hops back.</span></div></div>
+      <div class="st sticker"><div class="e">🎯</div><div><b>Right on the beat</b><span>It listens along, so every line lands with the singer. Skip, pause, rewind: it keeps up.</span></div></div>
+      <div class="st sticker"><div class="e">🌍</div><div><b>Speaks every language</b><span>English, Español, 日本語, 한국어, हिन्दी, Français… If it's sung, it's shown.</span></div></div>
+      <div class="st sticker"><div class="e">🎀</div><div><b>Pick a vibe</b><span>Neon, Pixel, Future or Cutie, then tweak every font, colour and animation.</span></div></div>
       <div class="st sticker"><div class="e">🍿</div><div><b>Hides for movies</b><span>Goes fullscreen? Lirico steps aside.</span></div></div>
-      <div class="st sticker"><div class="e">😴</div><div><b>Zero babysitting</b><span>Starts with Windows. Waits for the next song.</span></div></div>
+      <div class="st sticker"><div class="e">😴</div><div><b>Zero babysitting</b><span>Starts with Windows. Waits quietly for the next song.</span></div></div>
     </div>
   </section>
 
@@ -329,7 +334,7 @@ document.querySelectorAll(".btn, .get").forEach(b => b.addEventListener("click",
 // floating notes in the background of the hero
 (function () {
   const hero = document.querySelector(".hero"); hero.style.position = "relative";
-  [["♪", "4%", "82%", 0], ["♫", "46%", "6%", -2], ["♬", "92%", "90%", -4], ["★", "40%", "92%", -1]].forEach(([g, x, y, d]) => {
+  [["♪", "26%", "99%", 0], ["♫", "46%", "6%", -2], ["♬", "92%", "90%", -4], ["★", "40%", "92%", -1]].forEach(([g, x, y, d]) => {
     const f = document.createElement("span"); f.className = "floaty"; f.textContent = g; f.style.left = x; f.style.top = y; f.style.animationDelay = d + "s";
     hero.appendChild(f);
   });

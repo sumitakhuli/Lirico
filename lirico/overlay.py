@@ -33,8 +33,16 @@ def _font(theme: Theme, size: float, weight: int) -> QFont:
     f.setPointSizeF(max(6.0, size))
     f.setWeight(QFont.Weight(max(100, min(900, int(weight)))))
     f.setHintingPreference(QFont.PreferNoHinting)
-    f.setStyleStrategy(QFont.PreferAntialias)
+    f.setStyleStrategy(QFont.PreferAntialias if theme.font_antialias else QFont.NoAntialias)
+    if theme.uppercase:
+        f.setCapitalization(QFont.AllUppercase)
+    if theme.letter_spacing:
+        f.setLetterSpacing(QFont.PercentageSpacing, 100.0 + theme.letter_spacing)
     return f
+
+
+def _glyphs(theme: Theme) -> list[str]:
+    return [g for g in theme.deco_glyphs.split() if g]
 
 
 def _lerp(a: float, b: float, t: float) -> float:
@@ -173,6 +181,7 @@ class Overlay(QWidget):
         self._layout_cache: dict = {}
         self._dock: QRect | None = None      # docked inside the taskbar (logical rect)
         self._snapping = False                # being pulled onto a magnet target
+        self._light_surface = False           # docked on a light taskbar
 
         self._trans = 1.0
         self._trans_anim = QVariantAnimation(self, startValue=0.0, endValue=1.0)
@@ -210,11 +219,31 @@ class Overlay(QWidget):
         self.c_text, self.c_next = QColor(t.text_color), QColor(t.next_color)
         self.c_status, self.c_accent = QColor(t.status_color), QColor(t.accent_color)
         self.c_shadow = QColor(t.shadow_color)
+        self._apply_surface_colors()
         self._trans_anim.setDuration(max(1, t.transition_ms))
         self._fade_anim.setDuration(max(1, t.fade_ms))
         self._layout_cache.clear()
         self._reposition()
         self.update()
+
+    def set_light_surface(self, light: bool) -> None:
+        """The taskbar under the docked lyrics is light (used with a see-through background)."""
+        if light != self._light_surface:
+            self._light_surface = light
+            self._apply_surface_colors()
+            self.update()
+
+    def _dark_text(self) -> bool:
+        t = self.theme
+        return (self._dock is not None and self._light_surface and t.adapt_to_taskbar
+                and t.panel_opacity < 0.25)
+
+    def _apply_surface_colors(self) -> None:
+        t = self.theme
+        if self._dark_text():
+            self.c_text, self.c_status = QColor("#F0141418"), QColor("#C0141418")
+        else:
+            self.c_text, self.c_status = QColor(t.text_color), QColor(t.status_color)
 
     # ------------------------------------------------------------------ window
     def _apply_flags(self) -> None:
@@ -317,6 +346,7 @@ class Overlay(QWidget):
             self.move(self._dock.topLeft())
         elif was:
             self.apply_theme(self.theme)          # restores fonts, size and position
+        self._apply_surface_colors()
         if self.isVisible():
             self._harden()
         self.update()
@@ -418,6 +448,8 @@ class Overlay(QWidget):
             self._press_pos = e.globalPosition().toPoint()
             self._drag_offset = self._press_pos - self.pos()
             self.setCursor(Qt.ClosedHandCursor)
+            from .taskbar_dock import exclude_from_capture
+            exclude_from_capture(int(self.winId()), True)   # the magnets scan the screen under us
         elif e.button() == Qt.RightButton:
             self.context_menu.emit(e.globalPosition().toPoint())
 
@@ -450,6 +482,7 @@ class Overlay(QWidget):
             self._drag_offset = None
             self._snapping = False
             self.setCursor(Qt.OpenHandCursor)
+            self._harden()
             if moved:
                 if self._dock is None:
                     self._saved_pos = self.pos()
@@ -526,11 +559,69 @@ class Overlay(QWidget):
             return
         base = p.opacity()
         p.setOpacity(base * opacity)
-        if self.theme.shadow:
+        dark = self._dark_text()
+        if self.theme.text_glow and not dark:
+            # neon: the text drawn faintly around itself in the accent color
+            glow = QColor(self.c_accent)
+            for r, a in ((3.0, 0.13), (1.5, 0.30)):
+                glow.setAlphaF(a)
+                p.setPen(glow)
+                for dx, dy in ((r, 0), (-r, 0), (0, r), (0, -r), (r * .7, r * .7), (-r * .7, r * .7),
+                               (r * .7, -r * .7), (-r * .7, -r * .7)):
+                    lay.layout.draw(p, QPointF(x + dx, y + dy))
+        elif self.theme.shadow and not dark:
             p.setPen(self.c_shadow)
             lay.layout.draw(p, QPointF(x + 1.0, y + 1.2))
         p.setPen(color)
         lay.layout.draw(p, QPointF(x, y))
+        p.setOpacity(base)
+
+    def _draw_underline(self, p: QPainter, lay: _Layout, x0: float, y: float, chars: float,
+                        opacity: float, text: str, clamp: float | None = None) -> None:
+        """The bar under the sung part of the line, in the theme's style, plus
+        the little picture riding its tip (theme.deco_glyphs)."""
+        t = self.theme
+        segs = lay.underline_segments(chars)
+        if not segs:
+            return
+        th = max(1.0, t.underline_thickness)
+        base = p.opacity()
+        p.setOpacity(base * opacity)
+        for x1, x2, yy in segs:
+            if clamp is not None:
+                yy = min(yy, clamp)
+            r = QRectF(x0 + x1, y + yy - th / 2, max(th, x2 - x1), th)
+            if t.underline_style == "blocks":
+                step = th * 2.0
+                bx = r.left()
+                while bx + th <= r.right() + 0.5:
+                    p.fillRect(QRectF(round(bx), round(r.top()), round(th * 1.4), round(th)), self.c_accent)
+                    bx += step
+                continue
+            if t.underline_style == "glow":
+                halo = QColor(self.c_accent)
+                for grow, a in ((th * 2.2, 0.12), (th * 1.1, 0.25)):
+                    halo.setAlphaF(a)
+                    g = QPainterPath()
+                    gr = r.adjusted(-grow / 2, -grow, grow / 2, grow)
+                    g.addRoundedRect(gr, gr.height() / 2, gr.height() / 2)
+                    p.fillPath(g, halo)
+            bar = QPainterPath()
+            bar.addRoundedRect(r, th / 2, th / 2)
+            p.fillPath(bar, self.c_accent)
+        glyphs = _glyphs(t)
+        if glyphs and chars < len(lay.text) + 0.5:
+            x1, x2, yy = segs[-1]
+            if clamp is not None:
+                yy = min(yy, clamp)
+            g = glyphs[sum(map(ord, text)) % len(glyphs)]
+            f = QFont("Segoe UI Emoji")
+            size = max(10, int(QFontMetricsF(lay.font).height() * 0.8))
+            f.setPixelSize(size)
+            p.setFont(f)
+            p.setPen(self.c_text)
+            p.drawText(QRectF(x0 + x2 - size * 0.55, y + yy - size * 0.6, size * 1.2, size * 1.2),
+                       Qt.AlignCenter, g)
         p.setOpacity(base)
 
     def _paint_docked(self, p: QPainter, row: _Row, sung: float) -> None:
@@ -555,14 +646,7 @@ class Overlay(QWidget):
             y = (H - lay.height) / 2 + dy
             self._draw_layout(p, lay, x0, y, color, opacity)
             if current and r.kind == LYRIC and t.highlight == "underline" and chars > 0:
-                th = max(1.0, t.underline_thickness)
-                base = p.opacity()
-                p.setOpacity(base * opacity)
-                for x1, x2, yy in lay.underline_segments(chars):
-                    bar = QPainterPath()
-                    bar.addRoundedRect(QRectF(x0 + x1, y + min(yy, lay.height + 1) - th / 2, max(th, x2 - x1), th), th / 2, th / 2)
-                    p.fillPath(bar, self.c_accent)
-                p.setOpacity(base)
+                self._draw_underline(p, lay, x0, y, chars, opacity, r.text, clamp=lay.height + 1)
 
         trans = 1.0 if self._preview else self._trans
         p.save()
@@ -664,14 +748,7 @@ class Overlay(QWidget):
                 return
             self._draw_layout(p, lay, x0, y, color, opacity)
             if r.kind == LYRIC and t.highlight == "underline" and sung_chars > 0 and opacity > 0.05:
-                th = max(1.0, t.underline_thickness)
-                base = p.opacity()
-                p.setOpacity(base * opacity)
-                for x1, x2, yy in lay.underline_segments(sung_chars):
-                    bar = QPainterPath()
-                    bar.addRoundedRect(QRectF(x0 + x1, y + yy - th / 2, max(th, x2 - x1), th), th / 2, th / 2)
-                    p.fillPath(bar, self.c_accent)
-                p.setOpacity(base)
+                self._draw_underline(p, lay, x0, y, sung_chars, opacity, r.text)
 
         if trans < 1.0 and t.animation != "none":
             slide = t.slide_px if t.animation == "slide" else 0.0

@@ -1,37 +1,66 @@
 <template>
   <style>
     @font-face { font-family: "Nirmala UI"; src: local("Nirmala UI"); }
+    @font-face { font-family: "Yu Gothic UI"; src: local("Yu Gothic UI Semibold"), local("Yu Gothic UI"); }
+    @font-face { font-family: "Malgun Gothic"; src: local("Malgun Gothic Bold"), local("Malgun Gothic"); }
     @font-face { font-family: "Segoe UI Variable Display"; src: local("Segoe UI Variable Display"), local("Segoe UI Variable"); }
     #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif;
-      background: radial-gradient(900px 520px at 50% 50%, rgba(255,170,120,0.10), transparent 65%), #0b0d12; }
-    #g-pill { position: absolute; left: 0; right: 0; top: 400px; margin: 0 auto; width: 940px; height: 150px; border-radius: 40px;
+      background: radial-gradient(900px 520px at 50% 45%, rgba(126,224,195,0.10), transparent 65%), #0b0d12; }
+    #g-pill { position: absolute; left: 0; right: 0; top: 380px; margin: 0 auto; width: 940px; height: 150px; border-radius: 40px;
       background: rgba(14,16,20,0.8); border: 1px solid rgba(255,255,255,0.07); }
     .g-row { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 64px; font-weight: 600; color: #fff; white-space: nowrap; }
-    #g-deva { font-family: "Nirmala UI", sans-serif; }
-    #g-lat { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; }
-    #g-cap { position: absolute; left: 0; right: 0; top: 620px; text-align: center; }
+      font-size: 66px; font-weight: 600; color: #fff; white-space: nowrap; opacity: 0;
+      font-family: "Segoe UI Variable Display", "Segoe UI", "Nirmala UI", "Yu Gothic UI", "Malgun Gothic", sans-serif; }
+    .g-row span { position: relative; }
+    .g-row span::after { content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 5px; border-radius: 3px; background: #7ee0c3; transform: scaleX(var(--u, 0)); transform-origin: left; }
+    .g-lang { position: absolute; left: 0; right: 0; top: 548px; text-align: center; font-size: 26px; letter-spacing: .14em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45); opacity: 0; }
+    #g-cap { position: absolute; left: 0; right: 0; top: 650px; text-align: center; }
     #g-cap h2 { font-size: 58px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
     #g-cap p { font-size: 28px; color: rgba(255,255,255,0.6); margin-top: 10px; }
     #g-cap em { font-style: normal; color: #7ee0c3; }
   </style>
   <div id="root" data-composition-id="hinglish" data-width="1920" data-height="1080">
-    <div id="g-pill" class="clip" data-start="0" data-duration="3" data-layout-allow-overlap>
-      <div class="g-row" id="g-deva">दिल की बातें, धीरे धीरे</div>
-      <div class="g-row" id="g-lat">Dil ki baatein, dheere dheere</div>
+    <div id="g-pill" class="clip" data-start="0" data-duration="4.6" data-layout-allow-overlap>
+      <div class="g-row" id="r0"><span>Sing it with me</span></div>
+      <div class="g-row" id="r1"><span>Canta conmigo</span></div>
+      <div class="g-row" id="r2"><span>मेरे साथ गाओ</span></div>
+      <div class="g-row" id="r3"><span>一緒に歌おう</span></div>
+      <div class="g-row" id="r4"><span>함께 노래해요</span></div>
+      <div class="g-row" id="r5"><span>Chante avec moi</span></div>
+      <div class="g-row" id="r6"><span>Mere saath gaao</span></div>
     </div>
-    <div id="g-cap" class="clip" data-start="0" data-duration="3">
-      <h2>Hindi, in <em>English letters.</em></h2>
-      <p>Prefer Devanagari? One switch in Settings.</p>
+    <div id="g-labels" class="clip" data-start="0" data-duration="4.6" data-layout-allow-overlap>
+      <div class="g-lang" id="l0">English</div>
+      <div class="g-lang" id="l1">Español</div>
+      <div class="g-lang" id="l2">हिन्दी</div>
+      <div class="g-lang" id="l3">日本語</div>
+      <div class="g-lang" id="l4">한국어</div>
+      <div class="g-lang" id="l5">Français</div>
+      <div class="g-lang" id="l6">Hindi, in English letters</div>
+    </div>
+    <div id="g-cap" class="clip" data-start="0" data-duration="4.6">
+      <h2>Any language. <em>Every word.</em></h2>
+      <p>Whatever's playing, the lyrics show up on the beat.</p>
     </div>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     tl.fromTo("#g-pill", { scale: 0.92, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.45, ease: "power3.out" }, 0);
-    tl.fromTo("#g-lat", { opacity: 0, filter: "blur(10px)", y: 14 }, { opacity: 0, filter: "blur(10px)", y: 14, duration: 0.01 }, 0);
-    tl.to("#g-deva", { opacity: 0, filter: "blur(10px)", y: -14, duration: 0.4, ease: "power2.inOut" }, 1.55);
-    tl.to("#g-lat", { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.4, ease: "power2.inOut" }, 1.6);
     tl.fromTo("#g-cap", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+    // one line after another, like a greeting passed around the world
+    const step = 0.58, hold = 0.42;
+    for (let i = 0; i < 7; i++) {
+      const t0 = 0.1 + i * step, last = i === 6;
+      tl.fromTo("#r" + i, { opacity: 0, filter: "blur(10px)", y: 16 },
+        { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.22, ease: "power2.out" }, t0);
+      tl.fromTo("#r" + i + " span", { "--u": 0 }, { "--u": 1, duration: hold, ease: "none" }, t0);
+      tl.fromTo("#l" + i, { opacity: 0 }, { opacity: 1, duration: 0.18 }, t0 + 0.04);
+      if (!last) {
+        tl.to("#r" + i, { opacity: 0, filter: "blur(10px)", y: -16, duration: 0.2, ease: "power2.in" }, t0 + step - 0.12);
+        tl.to("#l" + i, { opacity: 0, duration: 0.15 }, t0 + step - 0.12);
+      }
+    }
     window.__timelines["hinglish"] = tl;
   </script>
 </template>

@@ -22,6 +22,9 @@ class Theme:
     next_size: float = 10.5           # upcoming line, pt
     next_weight: int = 500
     status_size: float = 11.0         # "Finding lyrics…" etc.
+    uppercase: bool = False           # SHOW LYRICS IN CAPITALS
+    letter_spacing: float = 0.0       # extra spacing between letters, % of normal
+    font_antialias: bool = True       # off = crisp, pixel-style edges
     max_lines: int = 2                # long lines wrap to at most this many rows
 
     # ---- Colors -------------------------------------------------------------
@@ -29,12 +32,14 @@ class Theme:
     next_color: str = "#99FFFFFF"
     status_color: str = "#B3FFFFFF"
     accent_color: str = "#FF7EE0C3"   # progress underline, ♪ glyph
+    text_glow: bool = False           # soft accent-colored glow around the text (neon)
+    adapt_to_taskbar: bool = True     # transparent + light taskbar: switch to dark text
     shadow: bool = True
     shadow_color: str = "#99000000"
 
     # ---- Background panel ---------------------------------------------------
     panel_color: str = "#FF0E1014"
-    panel_opacity: float = 0.45       # translucent background (0 = invisible, still draggable)
+    panel_opacity: float = 0.0        # 0 = transparent background (still draggable)
     panel_radius: float = 14.0
     panel_padding_x: int = 16
     panel_padding_y: int = 7
@@ -54,6 +59,10 @@ class Theme:
     highlight_strength: float = 0.30  # opacity of the moving word highlight
     unsung_opacity: float = 0.62      # other words while "word" highlight is on
     underline_thickness: float = 2.0
+    underline_style: str = "line"     # "line" | "glow" | "blocks"
+    # Little pictures that ride the tip of the underline, one per line
+    # (space-separated, e.g. "🌸 🧸"). Empty = none.
+    deco_glyphs: str = ""
 
     # ---- Motion -------------------------------------------------------------
     animation: str = "slide"          # "slide" | "fade" | "none"
@@ -105,3 +114,41 @@ class Theme:
 
 # Factory defaults. Edit values above to change them for everyone.
 THEME = Theme()
+
+# Ready-made looks. A preset is just a set of overrides on THEME (colors,
+# fonts, a few effects); everything stays customisable on top of it.
+PRESETS: dict[str, tuple[str, dict]] = {
+    "classic": ("Classic", {}),
+    "glass": ("Glass", {"panel_opacity": 0.45}),
+    "neon": ("Neon", {
+        "font_weight": 700, "text_color": "#FFFFF2FD", "next_color": "#99FFD6F7",
+        "accent_color": "#FF00F0FF", "text_glow": True, "underline_style": "glow",
+        "underline_thickness": 2.5, "shadow": False, "panel_color": "#FF0A0018", "panel_opacity": 0.0,
+        "gap_glyph": "✦", "tray_fg": "#FF00F0FF"}),
+    "pixel": ("Pixel", {
+        "font_family": "Cascadia Mono", "fallback_families": ["Consolas", "Segoe UI", "Nirmala UI"],
+        "font_weight": 700, "font_antialias": False, "text_color": "#FFE9FFE4", "next_color": "#9939FF14",
+        "accent_color": "#FF39FF14", "underline_style": "blocks", "underline_thickness": 3.0,
+        "panel_radius": 0.0, "panel_color": "#FF000000", "animation": "none", "gap_glyph": "▮▮",
+        "tray_fg": "#FF39FF14"}),
+    "future": ("Future", {
+        "font_family": "Bahnschrift", "font_weight": 400, "uppercase": True, "letter_spacing": 6.0,
+        "text_color": "#FFE6F4FF", "next_color": "#8099C8FF", "accent_color": "#FF4FC3FF",
+        "underline_thickness": 1.5, "panel_radius": 4.0, "panel_color": "#FF050B18",
+        "animation": "fade", "gap_glyph": "◇", "tray_fg": "#FF4FC3FF"}),
+    "cutie": ("Cutie", {
+        "font_weight": 700, "text_color": "#FFFFF0F7", "next_color": "#B3FFC2E0",
+        "accent_color": "#FFFF6FB5", "underline_thickness": 3.0, "shadow_color": "#99601040",
+        "deco_glyphs": "🌸 🧸 🎀 💗 🌷", "gap_glyph": "🌸", "panel_color": "#FF3A1430",
+        "panel_radius": 20.0, "tray_fg": "#FFFF6FB5"}),
+}
+
+
+def base_theme(preset: str) -> Theme:
+    """THEME with a preset applied (unknown names = Classic)."""
+    return THEME.with_overrides(PRESETS.get(preset, PRESETS["classic"])[1])
+
+
+def make_theme(preset: str, overrides: dict | None) -> Theme:
+    """What the overlay shows: the preset plus the user's own tweaks."""
+    return base_theme(preset).with_overrides(overrides)
