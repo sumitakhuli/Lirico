@@ -24,7 +24,13 @@ if TYPE_CHECKING:  # pragma: no cover
 WINDOW_QSS = """
 QWidget { background: #14161b; color: #e6e8ee; font-family: 'Segoe UI Variable Text', 'Segoe UI';
           font-size: 10pt; }
+QWidget#side, QWidget#quick { background: #101216; }
 QListWidget#nav { background: #101216; border: none; padding: 10px 6px; outline: none; }
+QLabel#qhead { color: #5d6474; font-size: 8.5pt; letter-spacing: 1px; background: transparent; }
+QCheckBox#qtoggle { color: #c3c8d3; spacing: 10px; background: transparent; }
+QCheckBox#qtoggle::indicator { width: 28px; height: 15px; border-radius: 7px; }
+QPushButton#coffee { background: #2a2416; color: #ffd27a; border: 1px solid #3d3420; border-radius: 9px; padding: 8px 10px; }
+QPushButton#coffee:hover { background: #352d19; }
 QListWidget#nav::item { padding: 9px 14px; border-radius: 8px; margin: 1px 4px; color: #aab0bd; }
 QListWidget#nav::item:selected { background: #22262f; color: #ffffff; }
 QListWidget#nav::item:hover:!selected { background: #1a1d24; }
@@ -67,11 +73,18 @@ class SettingsWindow(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         self.nav = QListWidget(objectName="nav")
-        self.nav.setFixedWidth(170)
         self.pages = QStackedWidget()
-        root.addWidget(self.nav)
-        root.addWidget(self.pages, 1)
         self._refreshers: list[Callable[[], None]] = []
+        side = QWidget(objectName="side")
+        side.setFixedWidth(190)
+        sv = QVBoxLayout(side)
+        sv.setContentsMargins(0, 0, 0, 16)
+        sv.setSpacing(0)
+        sv.addWidget(self.nav)
+        sv.addStretch(1)
+        sv.addWidget(self._quick_panel())
+        root.addWidget(side)
+        root.addWidget(self.pages, 1)
 
         self._page("Appearance", self._build_appearance)
         self._page("Motion", self._build_motion)
@@ -79,10 +92,41 @@ class SettingsWindow(QWidget):
         self._page("Sync & Lyrics", self._build_sync)
         self._page("Hotkeys", self._build_hotkeys)
         self.nav.currentRowChanged.connect(self.pages.setCurrentIndex)
+        self.nav.setFixedHeight(5 * 38 + 24)
         self.nav.setCurrentRow(0)
 
         self._save_timer = QTimer(self, singleShot=True, interval=400)
         self._save_timer.timeout.connect(self.ctl.settings.save)
+
+    def _quick_panel(self) -> QWidget:
+        """Most-used switches, always one click away in the sidebar."""
+        st, ctl = self.ctl.settings, self.ctl
+        box = QWidget(objectName="quick")
+        v = QVBoxLayout(box)
+        v.setContentsMargins(16, 10, 12, 0)
+        v.setSpacing(10)
+        v.addWidget(QLabel("QUICK", objectName="qhead"))
+
+        def quick(label, getter, setter):
+            c = QCheckBox(label, objectName="qtoggle")
+            c.setChecked(bool(getter()))
+            c.toggled.connect(setter)
+            self._refreshers.append(lambda: (c.blockSignals(True), c.setChecked(bool(getter())), c.blockSignals(False)))
+            v.addWidget(c)
+
+        quick("Show lyrics", lambda: st.overlay_visible,
+              lambda on: (setattr(st, "overlay_visible", bool(on)), st.save()))
+        quick("Stick to taskbar", lambda: st.position_mode == "taskbar",
+              lambda on: ctl.set_position_mode("taskbar" if on else "float"))
+        quick("Auto-sync", lambda: st.auto_sync, ctl.set_auto_sync)
+        quick("Start with Windows", ctl.autostart_enabled, ctl.set_autostart)
+        from . import SUPPORT_URL
+        if SUPPORT_URL:
+            coffee = QPushButton("☕  Buy me a coffee", objectName="coffee")
+            coffee.clicked.connect(ctl.open_support)
+            v.addSpacing(6)
+            v.addWidget(coffee)
+        return box
 
     # ------------------------------------------------------------------ helpers
     def _page(self, name: str, builder) -> None:
@@ -223,8 +267,8 @@ class SettingsWindow(QWidget):
         self._row(lay, "Background color", self._color("panel_color", alpha=False))
         self._row(lay, "Background opacity", self._slider("panel_opacity", 0, 100, 1, "{:.0f}%", scale=100))
         self._row(lay, "Corner radius", self._slider("panel_radius", 0, 30, 1, "{:.0f} px"))
-        self._row(lay, "Width", self._slider("max_width_ratio", 20, 90, 1, "{:.0f}%", scale=100),
-                  "Maximum width, as a share of the screen")
+        self._row(lay, "Box width", self._slider("box_width", 260, 900, 10, "{:.0f} px"),
+                  "Fixed width of the floating lyrics box; long lines wrap inside it")
         self._row(lay, "Max rows per line", self._slider("max_lines", 1, 3, 1))
         self._row(lay, "Text shadow", self._theme_toggle("shadow"))
         self._row(lay, "Show next line", self._theme_toggle("show_next_line"))
@@ -263,11 +307,14 @@ class SettingsWindow(QWidget):
         hide.setValue(st.pause_hide_seconds)
         hide.valueChanged.connect(lambda v: (setattr(st, "pause_hide_seconds", float(v)), self._save_timer.start()))
         self._row(lay, "Hide after pausing for", hide)
-        self._row(lay, "Show lyrics in the taskbar",
-                  self._toggle(lambda: st.position_mode == "taskbar",
-                               lambda on: self.ctl.set_position_mode("taskbar" if on else "float")),
-                  "On: lyrics sit in the taskbar's empty space (also works with auto-hide). "
-                  "Off: they float just above the taskbar, and you can drag them anywhere")
+        self._row(lay, "Position", self._combo(
+            [("Attached to the taskbar", "taskbar"), ("Attached to the window title bar", "titlebar"),
+             ("Floating", "float")], lambda: st.position_mode, self.ctl.set_position_mode),
+            "Or just drag the lyrics: near the taskbar, or next to a window's minimise button, "
+            "they snap on like a magnet")
+        self._row(lay, "Share anonymous usage stats", self._toggle(lambda: st.telemetry, self.ctl.set_telemetry),
+                  "Counts only (minutes used, songs found or not, app version). "
+                  "Never song names, lyrics or audio")
         self._row(lay, "Start with Windows", self._toggle(self.ctl.autostart_enabled, self.ctl.set_autostart),
                   "Lirico starts quietly in the tray when you sign in")
 

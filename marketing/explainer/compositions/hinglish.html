@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face { font-family: "Nirmala UI"; src: local("Nirmala UI"); }
+    @font-face { font-family: "Segoe UI Variable Display"; src: local("Segoe UI Variable Display"), local("Segoe UI Variable"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif;
+      background: radial-gradient(900px 520px at 50% 50%, rgba(255,170,120,0.10), transparent 65%), #0b0d12; }
+    #g-pill { position: absolute; left: 0; right: 0; top: 400px; margin: 0 auto; width: 940px; height: 150px; border-radius: 40px;
+      background: rgba(14,16,20,0.8); border: 1px solid rgba(255,255,255,0.07); }
+    .g-row { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 64px; font-weight: 600; color: #fff; white-space: nowrap; }
+    #g-deva { font-family: "Nirmala UI", sans-serif; }
+    #g-lat { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; }
+    #g-cap { position: absolute; left: 0; right: 0; top: 620px; text-align: center; }
+    #g-cap h2 { font-size: 58px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
+    #g-cap p { font-size: 28px; color: rgba(255,255,255,0.6); margin-top: 10px; }
+    #g-cap em { font-style: normal; color: #7ee0c3; }
+  </style>
+  <div id="root" data-composition-id="hinglish" data-width="1920" data-height="1080">
+    <div id="g-pill" class="clip" data-start="0" data-duration="3" data-layout-allow-overlap>
+      <div class="g-row" id="g-deva">दिल की बातें, धीरे धीरे</div>
+      <div class="g-row" id="g-lat">Dil ki baatein, dheere dheere</div>
+    </div>
+    <div id="g-cap" class="clip" data-start="0" data-duration="3">
+      <h2>Hindi, in <em>English letters.</em></h2>
+      <p>Prefer Devanagari? One switch in Settings.</p>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#g-pill", { scale: 0.92, opacity: 0.3 }, { scale: 1, opacity: 1, duration: 0.45, ease: "power3.out" }, 0);
+    tl.fromTo("#g-lat", { opacity: 0, filter: "blur(10px)", y: 14 }, { opacity: 0, filter: "blur(10px)", y: 14, duration: 0.01 }, 0);
+    tl.to("#g-deva", { opacity: 0, filter: "blur(10px)", y: -14, duration: 0.4, ease: "power2.inOut" }, 1.55);
+    tl.to("#g-lat", { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.4, ease: "power2.inOut" }, 1.6);
+    tl.fromTo("#g-cap", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+    window.__timelines["hinglish"] = tl;
+  </script>
+</template>

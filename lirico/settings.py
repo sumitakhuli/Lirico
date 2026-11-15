@@ -36,6 +36,9 @@ class Settings:
     position: Optional[list] = None     # [x, y] top-left when floating; None = just above the taskbar
     position_mode: str = "taskbar"      # "taskbar" = in the taskbar's free space, "float" = anywhere
     autostart_setup: bool = False       # first-run "start with Windows" has been applied
+    telemetry: bool = True              # anonymous usage counts (Settings -> Behavior to turn off)
+    telemetry_notice: bool = False      # the one-time "we share anonymous counts" note was shown
+    install_id: str = ""                # random id for the counts; linked to nobody
     script_pref: str = "latin"          # "latin" (English letters, default) | "devanagari"
     lead: float = 0.15                  # show every line this many seconds early (reading time)
     offsets: dict = field(default_factory=dict)   # per-song extra offset, seconds

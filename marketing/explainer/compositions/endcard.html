@@ -1,0 +1,51 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif;
+      background: radial-gradient(900px 520px at 50% 45%, rgba(126,224,195,0.14), transparent 65%), #0b0d12; }
+    /* the mark, built from logo.svg's geometry (256 units -> 300 px) so it can perform */
+    #e-lock { position: absolute; left: 0; right: 0; top: 300px; height: 300px; display: flex; justify-content: center; gap: 56px; align-items: center; }
+    #e-mark { position: relative; width: 300px; height: 300px; flex: none; }
+    #e-tile { position: absolute; left: 5px; top: 5px; width: 290px; height: 290px; border-radius: 70px;
+      background: linear-gradient(170deg, #232838 0%, #0d0f15 100%); border: 1px solid rgba(255,255,255,0.08); }
+    .e-b { position: absolute; transform-origin: left center; }
+    #e-b1 { left: 66px; top: 87px; width: 127px; height: 26px; border-radius: 13px; background: rgba(255,255,255,0.30); }
+    #e-b2 { left: 66px; top: 138px; width: 169px; height: 30px; border-radius: 15px; background: #fff; }
+    #e-b3 { left: 66px; top: 190px; width: 113px; height: 14px; border-radius: 7px; background: #7ee0c3; }
+    #e-dot { position: absolute; left: 172px; top: 182px; width: 30px; height: 30px; border-radius: 50%; background: #7ee0c3;
+      box-shadow: 0 0 28px rgba(126,224,195,0.55); }
+    #e-word { font-size: 168px; font-weight: 600; color: #fff; letter-spacing: -0.035em; line-height: 1; }
+    #e-word span { color: #7ee0c3; }
+    #e-cta { position: absolute; left: 0; right: 0; top: 690px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+    #e-btn { padding: 22px 44px; border-radius: 18px; background: #7ee0c3; color: #0d0f15; font-size: 34px; font-weight: 600; }
+    #e-sub { font-size: 28px; color: rgba(255,255,255,0.6); }
+  </style>
+  <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080">
+    <div id="e-lock" class="clip" data-start="0" data-duration="3.8">
+      <div id="e-mark">
+        <div id="e-tile"></div>
+        <div class="e-b" id="e-b1"></div>
+        <div class="e-b" id="e-b2"></div>
+        <div class="e-b" id="e-b3"></div>
+        <div id="e-dot"></div>
+      </div>
+      <div id="e-word">lirico<span>.</span></div>
+    </div>
+    <div id="e-cta" class="clip" data-start="1.4" data-duration="2.4">
+      <div id="e-btn">Download for Windows</div>
+      <div id="e-sub">Free · Windows 10 &amp; 11 · lirico.sumitakhuli5022.workers.dev</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#e-tile", { scale: 0.6, opacity: 0, rotation: -8 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.55, ease: "back.out(1.6)" }, 0.05);
+    tl.fromTo("#e-b1", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 0.35);
+    tl.fromTo("#e-b2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 0.45);
+    tl.fromTo("#e-b3", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "none" }, 0.65);   // the underline sweeps
+    tl.fromTo("#e-dot", { x: -106, scale: 0.4, opacity: 0 }, { x: 0, scale: 1, opacity: 1, duration: 0.55, ease: "none" }, 0.65);
+    tl.to("#e-dot", { scale: 1.25, duration: 0.12, yoyo: true, repeat: 1, ease: "power2.out" }, 1.2);
+    tl.fromTo("#e-word", { clipPath: "inset(0 100% 0 0)", x: -30 }, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.6, ease: "power3.out" }, 0.9);
+    tl.fromTo("#e-btn", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 1.4);
+    tl.fromTo("#e-sub", { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 1.55);
+    window.__timelines["endcard"] = tl;
+  </script>
+</template>

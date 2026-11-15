@@ -179,3 +179,112 @@ class TaskbarDock:
         self._misses += 1
         if self._misses >= 2:
             self._gap = None               # really no room: float above the taskbar
+
+
+# --------------------------------------------------------------------------- title bar
+# The empty strip of the active window's title bar, just left of its
+# minimise / maximise / close buttons.
+
+_dwmapi = ctypes.windll.dwmapi
+_user32.GetForegroundWindow.restype = wintypes.HWND
+_user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+_SKIP_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "NotifyIconOverflowWindow",
+                 "Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow", "TopLevelWindowForOverflowXamlIsland"}
+DWMWA_CAPTION_BUTTON_BOUNDS, DWMWA_EXTENDED_FRAME_BOUNDS = 5, 9
+MIN_TITLE_SLOT = 170     # logical px
+
+
+def _dwm_rect(hwnd, attr) -> Optional[_RECT]:
+    r = _RECT()
+    try:
+        if _dwmapi.DwmGetWindowAttribute(wintypes.HWND(hwnd), attr, ctypes.byref(r), ctypes.sizeof(r)) == 0:
+            return r
+    except Exception:
+        pass
+    return None
+
+
+def _usable_window(hwnd, ignore: tuple) -> bool:
+    if not hwnd or int(hwnd) in ignore or not _user32.IsWindowVisible(hwnd) or _user32.IsIconic(hwnd):
+        return False
+    buf = ctypes.create_unicode_buffer(80)
+    _user32.GetClassNameW(hwnd, buf, 80)
+    return buf.value not in _SKIP_CLASSES
+
+
+class TitleBarDock:
+    """Finds a slot in the foreground window's title bar, left of its buttons,
+    and follows the active window as you switch apps."""
+
+    def __init__(self):
+        self._hwnd = None
+        self._slot: Optional[QRect] = None
+        self._last_scan = 0.0
+        self._last_key = None
+
+    def target(self, width: int, ignore: tuple = (), scan: bool = True) -> Optional[QRect]:
+        fg = _user32.GetForegroundWindow()
+        if _usable_window(fg, ignore):
+            hwnd = int(fg)
+        elif self._hwnd and _user32.IsWindow(self._hwnd) and _usable_window(self._hwnd, ignore):
+            hwnd = self._hwnd          # desktop/taskbar focused: stay on the last window
+        else:
+            return None
+        frame = _dwm_rect(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS)
+        win = _RECT()
+        if frame is None and not _user32.GetWindowRect(hwnd, ctypes.byref(win)):
+            return None
+        if frame is None:
+            frame = win
+        _user32.GetWindowRect(hwnd, ctypes.byref(win))
+        screen = QGuiApplication.primaryScreen()
+        dpr = screen.devicePixelRatio() or 1.0
+        caps = _dwm_rect(hwnd, DWMWA_CAPTION_BUTTON_BOUNDS)
+        if caps is not None and caps.right > caps.left and caps.bottom > caps.top:
+            # caption bounds are relative to the window rect
+            # (maximised windows overhang the screen: clip to the visible frame)
+            bx = win.left + caps.left
+            by = max(win.top + caps.top, frame.top)
+            bh = win.top + caps.bottom - by
+        else:   # apps that draw their own title bar (Chrome, VS Code...): standard size
+            bw = int(138 * dpr)
+            bx, by, bh = frame.right - bw, frame.top, int(32 * dpr)
+        bh = max(int(26 * dpr), min(bh, int(48 * dpr)))
+        right = bx - int(10 * dpr)
+        if right - frame.left < MIN_TITLE_SLOT * dpr:
+            return None
+        key = (hwnd, frame.left, frame.top, frame.right, right)
+        now = time.monotonic()
+        if scan and (key != self._last_key or now - self._last_scan > 2.0):
+            self._last_key, self._last_scan, self._hwnd = key, now, hwnd
+            self._slot = self._scan(right, by, bh, width, dpr, frame.left)
+        elif not scan:
+            self._hwnd = hwnd
+            w = int(width * dpr)
+            return QRect(round((right - w) / dpr), round(by / dpr), width, round(bh / dpr))
+        return self._slot
+
+    def _scan(self, right: int, top: int, h: int, width: int, dpr: float, left_limit: int) -> Optional[QRect]:
+        """Free run of title bar ending right next to the buttons (physical px in, logical out)."""
+        w = min(int(width * dpr), right - left_limit)
+        screen = QGuiApplication.primaryScreen()
+        x0 = right - w
+        pix = screen.grabWindow(0, round(x0 / dpr), round(top / dpr), round(w / dpr), round(h / dpr))
+        img = pix.toImage().convertToFormat(QImage.Format_Grayscale8)
+        iw, ih, bpl = img.width(), img.height(), img.bytesPerLine()
+        if iw < 20 or ih < 8:
+            return None
+        g = np.frombuffer(img.constBits(), dtype=np.uint8, count=bpl * ih).reshape(ih, bpl)[:, :iw]
+        band = g[int(ih * 0.2): int(ih * 0.8)].astype(np.float32)
+        busy = (band.std(axis=0) + np.abs(np.diff(band.mean(axis=0), prepend=band[:, :1].mean())) * 0.6) > 6.0
+        # walk left from the buttons until something occupies the title bar
+        free = 0
+        for x in range(iw - 1, -1, -1):
+            if busy[x]:
+                break
+            free += 1
+        free_logical = (free / (iw / (w / dpr))) - 8
+        if free_logical < MIN_TITLE_SLOT:
+            return None
+        slot_w = int(min(width, free_logical))
+        return QRect(round(right / dpr) - slot_w, round(top / dpr), slot_w, round(h / dpr))

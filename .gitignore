@@ -18,3 +18,16 @@ marketing/demo/.hyperframes/
 marketing/demo/renders/
 marketing/demo/node_modules/
 marketing/demo/.thumbnails/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+
+# Cloudflare / wrangler local state
+web/.wrangler/
+marketing/explainer/.hyperframes/
+marketing/explainer/.thumbnails/
+marketing/explainer/renders/

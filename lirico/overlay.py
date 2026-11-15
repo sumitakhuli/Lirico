@@ -172,6 +172,7 @@ class Overlay(QWidget):
         self._hover = False
         self._layout_cache: dict = {}
         self._dock: QRect | None = None      # docked inside the taskbar (logical rect)
+        self._snapping = False                # being pulled onto a magnet target
 
         self._trans = 1.0
         self._trans_anim = QVariantAnimation(self, startValue=0.0, endValue=1.0)
@@ -257,7 +258,7 @@ class Overlay(QWidget):
     def _resize_for_screen(self) -> None:
         t = self.theme
         geo = self._screen().availableGeometry()
-        w = int(max(240, geo.width() * t.max_width_ratio))
+        w = int(min(geo.width() - 32, max(240, t.box_width + 16)))
         fc, fn = QFontMetricsF(self.f_current), QFontMetricsF(self.f_next)
         h = int(t.panel_padding_y * 2 + fc.lineSpacing() * t.max_lines + t.line_gap
                 + fn.lineSpacing() + t.slide_px + 8)
@@ -306,7 +307,9 @@ class Overlay(QWidget):
             h = self._dock.height()
             # one line, sized to the taskbar: ~38% of its height
             self.f_current = _font(self.theme, self.theme.font_size, self.theme.font_weight)
-            self.f_current.setPixelSize(max(11, min(int(h * 0.38), int(self.theme.font_size * 1.34))))
+            # taskbar (~48 px): 38% of the height; short title bars (~26-32 px): half
+            share = 0.38 if h >= 40 else 0.5
+            self.f_current.setPixelSize(max(11, min(int(h * share), int(self.theme.font_size * 1.34))))
             self.f_status = QFont(self.f_current)
             self.f_status.setWeight(QFont.Weight(500))
             self._layout_cache.clear()
@@ -418,18 +421,40 @@ class Overlay(QWidget):
         elif e.button() == Qt.RightButton:
             self.context_menu.emit(e.globalPosition().toPoint())
 
+    def set_snap_provider(self, fn) -> None:
+        """fn(center: QPoint) -> QRect | None: a target the lyrics should pull onto."""
+        self._snap_provider = fn
+
     def mouseMoveEvent(self, e):
-        if self._drag_offset is not None:
-            self.move(e.globalPosition().toPoint() - self._drag_offset)
+        if self._drag_offset is None:
+            return
+        want = e.globalPosition().toPoint() - self._drag_offset
+        target = None
+        provider = getattr(self, "_snap_provider", None)
+        if provider is not None:
+            try:
+                target = provider(want + QPoint(self.width() // 2, self.height() // 2))
+            except Exception:
+                target = None
+        if target is not None:
+            # Magnet: pull our centre onto the target while inside its radius.
+            want = target.center() - QPoint(self.width() // 2, self.height() // 2)
+        if (target is not None) != self._snapping:
+            self._snapping = target is not None
+            self.update()
+        self.move(want)
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton and self._drag_offset is not None:
             moved = self._press_pos is not None and (e.globalPosition().toPoint() - self._press_pos).manhattanLength() > 3
             self._drag_offset = None
+            self._snapping = False
             self.setCursor(Qt.OpenHandCursor)
             if moved:
-                self._saved_pos = self.pos()
+                if self._dock is None:
+                    self._saved_pos = self.pos()
                 self.moved.emit(self.pos())
+            self.update()
 
     def enterEvent(self, e):
         self._hover = True
@@ -444,7 +469,7 @@ class Overlay(QWidget):
     def _area_width(self) -> float:
         if self._dock is not None:
             return self.width() - 28
-        return self.width() - 2 * self.theme.panel_padding_x - 6
+        return min(self.width() - 16, self.theme.box_width) - 2 * self.theme.panel_padding_x
 
     def _style(self, kind: str):
         if kind == LYRIC:
@@ -481,15 +506,15 @@ class Overlay(QWidget):
         t = self.theme
         if not row.text and not next_text:
             return (0.0, 0.0)
-        w, h = 0.0, 0.0
+        h = 0.0
         if row.text:
             lay = self._layout(row)
-            w, h = lay.text_width, lay.height
+            h = lay.height
         if next_text:
             fm = QFontMetricsF(self.f_next)
-            w = max(w, min(fm.horizontalAdvance(next_text), self._area_width()))
             h += (t.line_gap if row.text else 0) + fm.lineSpacing()
-        return (w + 2 * t.panel_padding_x, h + 2 * t.panel_padding_y)
+        # Fixed width (like in the taskbar): only the height follows the text.
+        return (self._area_width() + 2 * t.panel_padding_x, h + 2 * t.panel_padding_y)
 
     def _current_panel(self) -> tuple[float, float]:
         target = self._panel_size(self._row, self._next)
@@ -582,7 +607,10 @@ class Overlay(QWidget):
             # never fully transparent: an alpha of ~1/255 keeps it draggable
             fill.setAlphaF(max(1 / 255, min(1.0, t.panel_opacity)))
             p.fillPath(path, fill)
-            if self._hover and not self._click_through:
+            if self._snapping:
+                p.setPen(QPen(self.c_accent, 2))
+                p.drawPath(path)
+            elif self._hover and not self._click_through:
                 p.setPen(QPen(QColor(255, 255, 255, 40), 1))
                 p.drawPath(path)
 

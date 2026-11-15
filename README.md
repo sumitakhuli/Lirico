@@ -1,22 +1,35 @@
 # Lirico
 
-Time-synced lyrics for whatever is playing on your Windows PC, shown line by line,
-right in your taskbar's empty space (or floating anywhere you like).
+Time-synced lyrics for whatever is playing on your Windows PC, line by line,
+**right in your taskbar** (or beside any window's minimise button, or floating anywhere).
 
-**[⬇ Download Lirico.exe](https://github.com/sumitakhuli/Lirico/releases/latest/download/Lirico.exe)**,
-free, one file, Windows 10 / 11. No account, no setup.
+<p align="center"><a href="https://lirico.sumitakhuli5022.workers.dev"><img src="docs/demo.gif" alt="Lirico demo: lyrics in the taskbar, magnetic snapping, auto-sync" width="820"></a></p>
 
-- Works with **YouTube in Chrome/Edge**, **Spotify**, and any player in the Windows media
-  flyout (Windows media controls). No API keys, no logins.
-- **Sync first.** It picks the lyrics version timed to the exact recording playing, and
-  **listens for the singer** so music-video intros don't make lyrics start early.
-- Hindi songs show in **English letters (Hinglish)** by default; Devanagari is one switch away.
-- Lyrics come from **[LRCLIB](https://lrclib.net)** (free) at runtime and are cached locally.
-  Nothing is bundled.
-- Starts with Windows and lives in the tray. Turn either off in Settings.
+<p align="center">
+  <a href="https://lirico.sumitakhuli5022.workers.dev/download?src=readme"><b>⬇ Download Lirico.exe</b></a> ·
+  <a href="https://lirico.sumitakhuli5022.workers.dev">Website</a> ·
+  <a href="https://github.com/sumitakhuli/Lirico/releases/latest/download/lirico-explainer.mp4">Watch the 25 s video (MP4)</a>
+</p>
+
+Free, one file, Windows 10 / 11. No account, no setup.
+
+- **Finds the song by itself**: YouTube in Chrome/Edge, Spotify, any player in Windows' media controls.
+- **Lives in your taskbar's empty space**, also with auto-hide. Drag the lyrics near the taskbar,
+  or next to a window's minimise button, and they **snap on like a magnet**.
+- **Sync first**: picks the lyrics version timed to the exact recording, and **listens for the singer**
+  so music-video intros don't make lyrics start early.
+- Hindi songs in **English letters (Hinglish)** by default; Devanagari is one switch away.
+- Long lines wrap onto two balanced rows instead of being cut off.
+- Settings for font, size, colours, background, animations, hotkeys, with quick switches in the sidebar.
+- Starts with Windows and waits in the tray (turn off in Settings).
 
 > First launch: Windows SmartScreen may say "Windows protected your PC". Click
 > **More info → Run anyway** (the exe isn't code-signed yet).
+
+**Privacy.** Lyrics come from [LRCLIB](https://lrclib.net). Auto-sync listens to your PC's audio
+*on your PC only*; nothing is recorded, saved or sent. Lirico shares **anonymous usage counts**
+(minutes used, songs found or not, app version), never song names, lyrics or audio. Turn it off in
+Settings → Behavior. The website counts visits without cookies.
 
 ## Run it
 
@@ -126,5 +139,5 @@ Settings → Sync & Lyrics turns it off; tray → Sync → "Listen again" re-det
 ## Project layout
 
 `lirico/` app source · `tests/` unit tests and the YouTube matching corpus · `tools/` dev tools ·
-`brand/` logo · `site/` the product web page · `marketing/` the motion demo (HyperFrames project)
-and its render · `THIRD_PARTY_NOTICES.md` bundled open-source components.
+`brand/` logo · `web/` the website + download counter + stats (Cloudflare Worker, D1) ·
+`marketing/` the explainer videos (HyperFrames projects) and renders · `docs/` README media · `THIRD_PARTY_NOTICES.md` bundled open-source components.

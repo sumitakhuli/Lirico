@@ -60,8 +60,11 @@ class Controller(QObject):
         pos = settings.position
         self.overlay.set_saved_position(QPoint(*pos) if pos else None)
         self.overlay.moved.connect(self._on_moved)
-        from .taskbar_dock import TaskbarDock
+        from .taskbar_dock import TaskbarDock, TitleBarDock
         self.dock = TaskbarDock()
+        self.titlebar = TitleBarDock()
+        self._snap_kind: Optional[str] = None
+        self.overlay.set_snap_provider(self._snap_target)
         self.dock_timer = QTimer(self, interval=400)
         self.dock_timer.timeout.connect(self._update_dock)
 
@@ -99,6 +102,10 @@ class Controller(QObject):
         self.sync_lang = "en"
         self.sync_words: list = []
         self._last_tick = time.monotonic()
+        from .telemetry import Telemetry
+        self.telemetry = Telemetry(settings)
+        self.tele_timer = QTimer(self, interval=30 * 60 * 1000)
+        self.tele_timer.timeout.connect(self.telemetry.flush)
         self.autosync = AutoSyncEngine(speech_model_dir(), self.sync_ready.emit)
         self.sync_ready.connect(self._on_sync_result)
         self.sync_timer = QTimer(self, interval=SYNC_CHECK_MS)
@@ -130,6 +137,15 @@ class Controller(QObject):
         self.dock_timer.start()
         self._update_dock()
         self._setup_autostart()
+        self.telemetry.start()
+        self.tele_timer.start()
+        if self.settings.telemetry and not self.settings.telemetry_notice:
+            self.settings.telemetry_notice = True
+            self.settings.save()
+            QTimer.singleShot(4000, lambda: self.tray.notify(
+                "Lirico is running",
+                "Find it in the tray. Lirico shares anonymous usage counts (no song names) "
+                "to improve the app. Turn off in Settings → Behavior."))
         if settings.auto_sync:
             self.autosync.start()
         self.sync_timer.start()
@@ -171,6 +187,7 @@ class Controller(QObject):
     def _new_track(self, snap: MediaSnapshot) -> None:
         self.track_key = snap.track_key
         self.track = clean_track(snap.title, snap.artist, snap.album, snap.source_app)
+        self.telemetry.count("songs")
         self.result, self.timeline = None, None
         self.state = WAITING
         self.token += 1
@@ -218,6 +235,8 @@ class Controller(QObject):
         self.result = res
         log.info("lyrics: %s %r by %r Δ=%s romanized=%s (cache=%s)", res.status, res.track, res.artist,
                  None if res.duration_delta is None else round(res.duration_delta, 1), res.romanized, res.from_cache)
+        if res.status != ERROR and not getattr(res, "_counted", False):
+            self.telemetry.count("found" if res.status == SYNCED else "not_found")
         if res.status == SYNCED:
             self.timeline = LyricTimeline(res.lines)
             self.state = READY
@@ -271,6 +290,7 @@ class Controller(QObject):
             self._apply_auto_offset(est.offset)
             self.sync_state, self.hold = SYNC_LOCKED, False
             self.locked_play = 0.0
+            self.telemetry.count("sync_locked")
             self._flash("Synced to the singer", 1.8)
         elif self.sync_state == SYNC_LOCKED and abs(est.offset - self.offset) > 1.2:
             # A different answer must show up twice before we change our mind.
@@ -304,6 +324,18 @@ class Controller(QObject):
             self.autosync.recorder.stop()
             self.sync_state, self.hold = SYNC_OFF, False
 
+    def set_telemetry(self, enabled: bool) -> None:
+        if not enabled:
+            self.telemetry.flush(wait=False)   # nothing more after this
+        self.settings.telemetry = bool(enabled)
+        self.settings.save()
+
+    def open_support(self) -> None:
+        from . import SUPPORT_URL
+        if SUPPORT_URL:
+            import webbrowser
+            webbrowser.open(SUPPORT_URL)
+
     def set_wait_for_singer(self, enabled: bool) -> None:
         self.settings.wait_for_singer = bool(enabled)
         self.settings.save()
@@ -328,9 +360,13 @@ class Controller(QObject):
                 self.listen_play += dt
                 if self.hold and self.listen_play > HOLD_LIMIT:
                     self.hold = False          # couldn't hear it: show the lyrics as they are
+                    self.telemetry.count("sync_gave_up")
                     log.info("autosync: no lock after %.0f s, showing lyrics unshifted", HOLD_LIMIT)
             elif self.sync_state == SYNC_LOCKED:
                 self.locked_play += dt
+            if self.overlay_shown() and 0 < dt < 1:
+                self.telemetry.count("minutes", dt / 60)
+                self.telemetry.count("mode_" + self.settings.position_mode, dt / 60)
         if snap is None or not self.overlay_shown():
             ov.set_active(False)
             return
@@ -431,34 +467,72 @@ class Controller(QObject):
         self.settings.save()
 
     def _on_moved(self, pos: QPoint) -> None:
-        if self.settings.position_mode == "taskbar":
-            # Dragged out of the taskbar: float where it was dropped.
+        """Drag finished: attach to the magnet it was pulled onto, else float there."""
+        kind, self._snap_kind = self._snap_kind, None
+        if kind in ("taskbar", "titlebar"):
+            if kind != self.settings.position_mode:
+                self.set_position_mode(kind)
+                self._flash("Attached to the taskbar" if kind == "taskbar" else "Attached to the title bar", 1.6)
+            else:
+                self._update_dock()          # snap back into place
+            return
+        if self.settings.position_mode != "float":
             self.settings.position_mode = "float"
             self.overlay.set_dock(None)
-            self.overlay.set_saved_position(pos)
-            self._flash("Floating · Settings → Position to put it back in the taskbar", 3.0)
+            self._flash("Floating · drag it to the taskbar or a title bar to attach", 2.6)
+        self.overlay.set_saved_position(pos)
         self.settings.position = [pos.x(), pos.y()]
         self.settings.save()
 
+    # ------------------------------------------------------------------ magnets
+    SNAP_TASKBAR = 70      # px above the taskbar where it starts pulling
+    SNAP_TITLEBAR = 110    # px around the title-bar slot
+
+    def _snap_target(self, center: QPoint):
+        """While dragging: the rect the lyrics should pull onto, or None."""
+        self._snap_kind = None
+        try:
+            from .taskbar_dock import taskbar_state
+            st = taskbar_state()
+            if st is not None and st.bottom and center.y() >= st.rect.top() - self.SNAP_TASKBAR:
+                gap = self.dock.target(self.theme.box_width)
+                if gap is not None:
+                    self._snap_kind = "taskbar"
+                    return gap
+            slot = self.titlebar.target(self.theme.box_width, (int(self.overlay.winId()),))
+            if slot is not None:
+                dx, dy = center.x() - slot.center().x(), center.y() - slot.center().y()
+                if abs(dy) <= self.SNAP_TITLEBAR * 0.6 and abs(dx) <= self.SNAP_TITLEBAR + slot.width() / 2:
+                    self._snap_kind = "titlebar"
+                    return slot
+        except Exception:
+            log.exception("snap target failed")
+        return None
+
     # ------------------------------------------------------------------ taskbar dock
     def _update_dock(self) -> None:
-        if self.settings.position_mode != "taskbar":
-            if self.overlay.docked:
+        mode = self.settings.position_mode
+        if mode not in ("taskbar", "titlebar") or self.overlay._drag_offset is not None:
+            if mode == "float" and self.overlay.docked:
                 self.overlay.set_dock(None)
             return
         try:
-            screen_w = self.app.primaryScreen().geometry().width()
-            rect = self.dock.target(int(screen_w * self.theme.max_width_ratio))
+            if mode == "taskbar":
+                rect = self.dock.target(self.theme.box_width)
+            else:   # follows the active window as you switch apps
+                rect = self.titlebar.target(self.theme.box_width, (int(self.overlay.winId()),))
         except Exception:
-            log.exception("taskbar dock failed")
+            log.exception("dock failed")
             rect = None
         self.overlay.set_dock(rect)          # None: no room -> float just above the taskbar
         if rect is not None:
             self.overlay.raise_above_taskbar()  # the taskbar climbs above us when clicked
 
     def set_position_mode(self, mode: str) -> None:
-        self.settings.position_mode = "taskbar" if mode == "taskbar" else "float"
+        self.settings.position_mode = mode if mode in ("taskbar", "titlebar", "float") else "float"
         self.settings.save()
+        if mode == "float":
+            self.overlay.set_dock(None)
         self._update_dock()
 
     def reset_position(self) -> None:
@@ -632,6 +706,7 @@ class Controller(QObject):
         self.watcher.stop()
         self.tick_timer.stop()
         self.autosync.stop()
+        self.telemetry.flush(wait=True)
         self.hotkeys.unregister_all()
         self.tray.icon.hide()
         self.pool.shutdown(wait=False, cancel_futures=True)

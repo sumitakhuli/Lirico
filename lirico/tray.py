@@ -104,8 +104,10 @@ class Tray:
             self._add(m, status, enabled=False)
         m.addSeparator()
         self._add(m, "Show lyrics" + self._hk("toggle"), ctl.toggle_overlay, checked=ctl.overlay_shown())
-        intb = ctl.settings.position_mode == "taskbar"
-        self._add(m, "In the taskbar", lambda: ctl.set_position_mode("float" if intb else "taskbar"), checked=intb)
+        mode = ctl.settings.position_mode
+        self._add(m, "Attach to taskbar", lambda: ctl.set_position_mode("taskbar"), checked=mode == "taskbar")
+        self._add(m, "Attach to window title bar", lambda: ctl.set_position_mode("titlebar"), checked=mode == "titlebar")
+        self._add(m, "Floating", lambda: ctl.set_position_mode("float"), checked=mode == "float")
 
         has_song = ctl.has_song()
         sync = m.addMenu(f"Sync  ({ctl.offset:+.2f} s)")
@@ -143,4 +145,7 @@ class Tray:
 
         m.addSeparator()
         self._add(m, "Settings…" + self._hk("settings"), ctl.open_settings)
+        from . import SUPPORT_URL
+        if SUPPORT_URL:
+            self._add(m, "☕  Buy me a coffee", ctl.open_support)
         self._add(m, "Quit Lirico", ctl.quit)

@@ -1,0 +1,133 @@
+<template>
+  <style>
+    @font-face { font-family: "Segoe UI Variable Display"; src: local("Segoe UI Variable Display"), local("Segoe UI Variable"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Outfit", sans-serif;
+      background: radial-gradient(1300px 760px at 80% 10%, rgba(126,224,195,0.15), transparent 60%),
+                  radial-gradient(1000px 700px at 5% 95%, rgba(110,120,255,0.16), transparent 60%),
+                  linear-gradient(160deg, #171c2b 0%, #0b0d12 100%); }
+    /* window */
+    #d-win { position: absolute; left: 140px; top: 96px; width: 1640px; height: 860px; border-radius: 14px; overflow: hidden;
+      background: #12151d; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 50px 140px rgba(0,0,0,0.55); }
+    #d-title { position: absolute; left: 0; right: 0; top: 0; height: 56px; background: #191d28; }
+    #d-title .t { position: absolute; left: 26px; top: 15px; font-size: 21px; color: rgba(255,255,255,0.72); }
+    .d-cap { position: absolute; top: 0; width: 66px; height: 56px; }
+    .d-cap i { position: absolute; left: 24px; top: 27px; width: 18px; height: 2px; background: rgba(255,255,255,0.8); }
+    #d-max i { top: 20px; height: 15px; background: none; border: 2px solid rgba(255,255,255,0.8); border-radius: 2px; }
+    #d-close i, #d-close b { position: absolute; left: 22px; top: 27px; width: 22px; height: 2px; background: rgba(255,255,255,0.8); transform: rotate(45deg); }
+    #d-close b { transform: rotate(-45deg); }
+    .d-line { position: absolute; left: 60px; height: 14px; border-radius: 7px; background: #232938; }
+    .d-capt { position: absolute; left: 0; right: 0; top: 330px; text-align: center; }
+    .d-capt h2 { font-size: 66px; font-weight: 600; letter-spacing: -0.03em; color: #fff; }
+    .d-capt p { font-size: 30px; color: rgba(255,255,255,0.6); margin-top: 12px; }
+    .d-capt em { font-style: normal; color: #7ee0c3; }
+    /* taskbar */
+    #d-task { position: absolute; left: 0; right: 0; top: 1008px; height: 72px; background: rgba(24,27,35,0.97); border-top: 1px solid rgba(255,255,255,0.06); }
+    #d-wx { position: absolute; left: 30px; top: 14px; display: flex; gap: 12px; align-items: center; color: rgba(255,255,255,0.85); font-size: 18px; line-height: 1.2; }
+    #d-wx .sun { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #ffd76a, #f6a93b); }
+    .d-ico { position: absolute; top: 12px; width: 48px; height: 48px; border-radius: 12px; background: #2a303f; }
+    #d-search { position: absolute; left: 760px; top: 14px; width: 270px; height: 44px; border-radius: 22px; background: #2a2f3c; color: rgba(255,255,255,0.6); font-size: 18px; padding: 11px 0 0 52px; }
+    #d-tray { position: absolute; right: 26px; top: 12px; color: rgba(255,255,255,0.85); font-size: 17px; text-align: right; line-height: 1.35; }
+    /* magnet zones */
+    .d-zone { opacity: 0; position: absolute; border: 2px dashed rgba(126,224,195,0.85); border-radius: 30px; box-shadow: 0 0 30px rgba(126,224,195,0.35) inset; }
+    #d-z1 { left: 292px; top: 1012px; width: 386px; height: 64px; }
+    #d-z2 { left: 1148px; top: 100px; width: 428px; height: 50px; border-radius: 26px; }
+    .d-ring { opacity: 0; position: absolute; border: 3px solid #7ee0c3; border-radius: 40px; }
+    #d-r1 { left: 296px; top: 1016px; width: 378px; height: 56px; }
+    #d-r2 { left: 1152px; top: 104px; width: 420px; height: 42px; }
+    /* Lirico pills (reproduce the app's docked look) */
+    .d-pill { position: absolute; border-radius: 28px; background: rgba(14,16,20,0.78); border: 1px solid rgba(255,255,255,0.07);
+      font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; overflow: hidden; }
+    #d-tp { left: 296px; top: 1016px; width: 378px; height: 56px; }
+    #d-hp { left: 1152px; top: 104px; width: 420px; height: 42px; border-radius: 21px; }
+    .d-row { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; }
+    .d-row span { position: relative; color: #fff; font-weight: 600; white-space: nowrap; text-shadow: 1px 1.5px 0 rgba(0,0,0,0.6); }
+    #d-tp .d-row span { font-size: 23px; }
+    #d-hp .d-row span { font-size: 20px; }
+    .d-u { position: absolute; left: 0; bottom: -5px; height: 3px; border-radius: 2px; background: #7ee0c3; width: 0; }
+    #d-cur { position: absolute; left: 0; top: 0; width: 46px; height: 46px; }
+  </style>
+  <div id="root" data-composition-id="dock" data-width="1920" data-height="1080">
+    <div id="d-win">
+      <div id="d-title"><div class="t">Notes — weekend plans</div>
+        <div class="d-cap" id="d-min" style="right:132px"><i></i></div>
+        <div class="d-cap" id="d-max" style="right:66px"><i></i></div>
+        <div class="d-cap" id="d-close" style="right:0"><i></i><b></b></div>
+      </div>
+      <div class="d-line" style="top:110px;width:380px;background:#2c354a"></div>
+      <div class="d-line" style="top:150px;width:860px"></div>
+      <div class="d-line" style="top:190px;width:700px"></div>
+      <div class="d-line" style="top:690px;width:540px"></div>
+      <div class="d-line" style="top:730px;width:820px"></div>
+      <div class="d-capt" id="d-ca"><h2>Lives in your taskbar's <em>empty space.</em></h2><p>One line, right on beat, out of your way.</p></div>
+      <div class="d-capt" id="d-cb"><h2>Drag it. It <em>snaps like a magnet.</em></h2><p>Into the taskbar, or beside any window's minimise button.</p></div>
+    </div>
+
+    <div id="d-task">
+      <div id="d-wx"><div class="sun"></div><div>23°C<br /><span style="opacity:.6">Sunny</span></div></div>
+      <div class="d-ico" style="left:700px;background:linear-gradient(135deg,#4cc2ff,#1677e0)"></div>
+      <div id="d-search">Search</div>
+      <div class="d-ico" style="left:1046px"></div><div class="d-ico" style="left:1110px"></div><div class="d-ico" style="left:1174px"></div>
+      <div class="d-ico" style="left:1238px"></div><div class="d-ico" style="left:1302px"></div>
+      <div id="d-tray">10:42<br /><span style="opacity:.7">15-11-2026</span></div>
+    </div>
+
+    <div id="d-z1" class="d-zone clip" data-start="0" data-duration="10"></div>
+    <div id="d-z2" class="d-zone clip" data-start="0" data-duration="10"></div>
+    <div id="d-r1" class="d-ring clip" data-start="0" data-duration="10"></div>
+    <div id="d-r2" class="d-ring clip" data-start="0" data-duration="10"></div>
+
+    <div id="d-tp" class="d-pill clip" data-start="0" data-duration="10" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="d-row" id="d-t0"><span style="font-weight:500;color:rgba(255,255,255,.75)">♪&nbsp; Neon Monsoon</span></div>
+      <div class="d-row" id="d-t1"><span>City lights are humming low<i class="d-u" id="d-u1"></i></span></div>
+      <div class="d-row" id="d-t2"><span>Every window turns to gold<i class="d-u" id="d-u2"></i></span></div>
+    </div>
+    <div id="d-hp" class="d-pill clip" data-start="0" data-duration="10" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="d-row" id="d-h2"><span>Every window turns to gold<i class="d-u" style="width:100%"></i></span></div>
+      <div class="d-row" id="d-h3"><span>Hands up while the bassline rolls<i class="d-u" id="d-u3"></i></span></div>
+    </div>
+
+    <svg id="d-cur" class="clip" data-start="0" data-duration="10" viewBox="0 0 24 24" data-layout-allow-overflow>
+      <path d="M4 2 L4 19 L8.6 14.8 L11.6 21.6 L14.6 20.3 L11.7 13.6 L18 13.6 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // world in
+    tl.fromTo("#d-win", { y: 24, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0);
+    tl.fromTo("#d-task", { y: 40 }, { y: 0, duration: 0.45, ease: "power3.out" }, 0);
+    tl.fromTo("#d-ca", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.25);
+    // the taskbar gap lights up as a magnet zone, the lyrics fly in and snap
+    tl.fromTo("#d-z1", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.55);
+    tl.fromTo("#d-tp", { x: 520, y: -470, scale: 0.85, opacity: 0 }, { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.7, ease: "back.out(1.3)" }, 0.75);
+    tl.to("#d-z1", { opacity: 0, duration: 0.25 }, 1.45);
+    tl.fromTo("#d-r1", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.6, ease: "power2.out" }, 1.4);
+    // lines play with the progress underline
+    tl.fromTo("#d-t1", { opacity: 0, y: 10 }, { opacity: 0, y: 10, duration: 0.01 }, 0);
+    tl.fromTo("#d-t2", { opacity: 0, y: 10 }, { opacity: 0, y: 10, duration: 0.01 }, 0);
+    tl.to("#d-t0", { opacity: 0, y: -10, duration: 0.22 }, 1.6);
+    tl.to("#d-t1", { opacity: 1, y: 0, duration: 0.22 }, 1.6);
+    tl.fromTo("#d-u1", { width: "0%" }, { width: "100%", duration: 1.3, ease: "none" }, 1.7);
+    tl.to("#d-t1", { opacity: 0, y: -10, duration: 0.22 }, 3.1);
+    tl.to("#d-t2", { opacity: 1, y: 0, duration: 0.22 }, 3.1);
+    tl.fromTo("#d-u2", { width: "0%" }, { width: "100%", duration: 1.2, ease: "none" }, 3.2);
+    // the cursor grabs it and drags it up to the window's buttons
+    tl.to("#d-ca", { opacity: 0, y: -16, duration: 0.3 }, 4.2);
+    tl.fromTo("#d-cb", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 4.45);
+    tl.fromTo("#d-cur", { x: 1980, y: 860 }, { x: 470, y: 1030, duration: 0.65, ease: "power2.out" }, 4.3);
+    tl.to("#d-tp", { scale: 1.05, boxShadow: "0 18px 40px rgba(0,0,0,0.5)", duration: 0.15 }, 5.0);
+    tl.to("#d-cur", { x: 1347, y: 110, duration: 1.15, ease: "power2.inOut" }, 5.05);
+    tl.to("#d-tp", { x: 1362 - 485, y: 125 - 1044, duration: 1.15, ease: "power2.inOut" }, 5.05);
+    tl.fromTo("#d-z2", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 5.65);
+    // magnet: snaps in beside the minimise button
+    tl.to("#d-tp", { opacity: 0, duration: 0.15 }, 6.2);
+    tl.fromTo("#d-hp", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 6.2);
+    tl.to("#d-z2", { opacity: 0, duration: 0.2 }, 6.3);
+    tl.fromTo("#d-r2", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.6, ease: "power2.out" }, 6.25);
+    tl.to("#d-cur", { x: 1500, y: 420, opacity: 0, duration: 0.6, ease: "power2.in" }, 6.5);
+    tl.fromTo("#d-h3", { opacity: 0, y: 8 }, { opacity: 0, y: 8, duration: 0.01 }, 0);
+    tl.to("#d-h2", { opacity: 0, y: -8, duration: 0.22 }, 6.75);
+    tl.to("#d-h3", { opacity: 1, y: 0, duration: 0.22 }, 6.75);
+    tl.fromTo("#d-u3", { width: "0%" }, { width: "100%", duration: 2.2, ease: "none" }, 6.85);
+    window.__timelines["dock"] = tl;
+  </script>
+</template>

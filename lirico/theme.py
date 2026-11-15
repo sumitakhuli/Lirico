@@ -41,7 +41,8 @@ class Theme:
     line_gap: int = 2
 
     # ---- Layout -------------------------------------------------------------
-    max_width_ratio: float = 0.42     # of screen width
+    max_width_ratio: float = 0.42     # (legacy) of screen width
+    box_width: int = 460              # floating lyrics box width, px (fixed; text wraps inside)
     gap_above_taskbar: int = 8
 
     # ---- Lyrics display -----------------------------------------------------
