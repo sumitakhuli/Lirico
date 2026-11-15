@@ -176,7 +176,7 @@
 
   .note { position: fixed; z-index: 60; pointer-events: none; font-size: 26px; animation: rise 1.4s ease-out forwards; }
   @keyframes rise { to { transform: translate(var(--dx), -150px) rotate(var(--r)); opacity: 0; } }
-  .floaty { position: absolute; pointer-events: none; font-size: 30px; opacity: .55; animation: floaty 6s ease-in-out infinite; }
+  .floaty { position: absolute; pointer-events: none; font-size: 30px; opacity: .55; color: var(--ink); animation: floaty 6s ease-in-out infinite; }
   @keyframes floaty { 50% { transform: translateY(-16px) rotate(10deg); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
   .reveal.in { opacity: 1; transform: none; }
@@ -219,7 +219,6 @@
     </div>
 
     <div class="play-wrap">
-      <div class="vinyl" aria-hidden="true"></div>
       <div class="play sticker" id="play" aria-label="Try it: drag the lyrics">
         <div class="stage" id="stage">
           <div class="win">
@@ -334,7 +333,7 @@ document.querySelectorAll(".btn, .get").forEach(b => b.addEventListener("click",
 // floating notes in the background of the hero
 (function () {
   const hero = document.querySelector(".hero"); hero.style.position = "relative";
-  [["♪", "26%", "99%", 0], ["♫", "46%", "6%", -2], ["♬", "92%", "90%", -4], ["★", "40%", "92%", -1]].forEach(([g, x, y, d]) => {
+  [["♪", "26%", "99%", 0], ["♫", "46%", "6%", -2], ["♬", "92%", "90%", -4], ["★", "40%", "92%", -1], ["♪", "97%", "4%", -1.5], ["♫", "86%", "5%", -3], ["♩", "99%", "40%", -2.5], ["♬", "62%", "3%", -0.7], ["♪", "-1%", "30%", -3.6], ["♩", "70%", "97%", -1.2], ["✦", "52%", "88%", -4.4]].forEach(([g, x, y, d]) => {
     const f = document.createElement("span"); f.className = "floaty"; f.textContent = g; f.style.left = x; f.style.top = y; f.style.animationDelay = d + "s";
     hero.appendChild(f);
   });
