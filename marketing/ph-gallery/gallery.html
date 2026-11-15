@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lirico gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Gochi+Hand&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#fff6e6; --paper:#fffdf8; --ink:#17131f; --soft:#5b5566; --pink:#ff5fa2; --mint:#2fd3a1; --sun:#ffd23f; --lilac:#8f7dff; --sky:#5ec8ff; --peach:#ff9a6b;
+    --pop:"Bricolage Grotesque",system-ui,sans-serif; --hand:"Gochi Hand",cursive; --body:"Outfit",system-ui,sans-serif; --bw:3px; --sh:6px 6px 0 var(--ink); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1270px; height: 760px; overflow: hidden; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased;
+         background-image: repeating-linear-gradient(0deg, transparent 0 46px, rgba(23,19,31,.05) 46px 48px); }
+  .slide { display: none; position: relative; width: 1270px; height: 760px; overflow: hidden; }
+  .slide.on { display: block; }
+  .sticker { border: var(--bw) solid var(--ink); box-shadow: var(--sh); border-radius: 20px; background: var(--paper); }
+  .tag { display: inline-block; font-family: var(--hand); font-size: 26px; background: var(--mint); border: 2.5px solid var(--ink); padding: 3px 16px; border-radius: 999px; transform: rotate(-3deg); box-shadow: 4px 4px 0 var(--ink); }
+  h1 { font-family: var(--pop); font-weight: 800; letter-spacing: -.055em; line-height: .92; }
+  .hl { position: relative; white-space: nowrap; z-index: 0; }
+  .hl::before { content: ""; position: absolute; z-index: -1; left: -.08em; right: -.08em; top: .52em; bottom: .02em; background: var(--pink); transform: rotate(-1.5deg); border-radius: 6px; }
+  .hl.m::before { background: var(--mint); } .hl.s::before { background: var(--sun); } .hl.l::before { background: var(--lilac); }
+  .sub { font-size: 26px; line-height: 1.4; color: var(--soft); }
+  .sub b { color: var(--ink); }
+  .hand { font-family: var(--hand); font-size: 30px; }
+  .float { position: absolute; font-size: 34px; opacity: .55; }
+  /* mock desktop */
+  .desk { position: absolute; overflow: hidden; background: linear-gradient(135deg, #ffd9ec 0%, #ffe9b8 45%, #c9f3e6 100%); }
+  .win { position: absolute; border-radius: 12px; background: #fff; border: 2px solid rgba(23,19,31,.15); box-shadow: 0 18px 40px rgba(23,19,31,.15); overflow: hidden; }
+  .tb { height: 44px; background: #f3f1f6; display: flex; align-items: center; padding-left: 16px; font-size: 15px; color: #6a6475; }
+  .caps { position: absolute; right: 0; top: 0; display: flex; }
+  .caps span { width: 50px; height: 44px; display: grid; place-items: center; color: #2a2433; font-size: 15px; }
+  .line { position: absolute; left: 26px; height: 12px; border-radius: 6px; background: #eceaf1; }
+  .task { position: absolute; left: 0; right: 0; bottom: 0; height: 58px; background: rgba(255,255,255,.86); border-top: 1px solid rgba(23,19,31,.08); }
+  .task .ic { position: absolute; top: 11px; width: 36px; height: 36px; border-radius: 10px; background: #e7e4ee; }
+  .task .start { background: linear-gradient(135deg, #4cc2ff, #1677e0); }
+  .task .se { position: absolute; top: 13px; width: 150px; height: 32px; border-radius: 16px; background: #efedf3; font-size: 13px; color: #8a8496; padding: 8px 0 0 34px; }
+  .task .clock { position: absolute; right: 16px; top: 10px; font-size: 13px; text-align: right; color: #3a3442; line-height: 1.35; }
+  .task .wx { position: absolute; left: 16px; top: 11px; display: flex; gap: 9px; align-items: center; font-size: 13px; color: #3a3442; line-height: 1.2; }
+  .task .wx i { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #ffe08a, #f2a33a); }
+  .pill { position: absolute; display: grid; place-items: center; border-radius: 22px; background: rgba(23,19,31,.9); color: #fff; font-family: "Segoe UI Variable Display","Segoe UI",var(--body); font-weight: 600; white-space: nowrap; }
+  .pill .t { position: relative; }
+  .pill .u { position: absolute; left: 0; bottom: -5px; height: 3px; border-radius: 2px; background: var(--mint); }
+  .zone { position: absolute; border: 3px dashed var(--pink); border-radius: 22px; background: rgba(255,95,162,.12); }
+  .arrow { position: absolute; font-family: var(--hand); font-size: 30px; }
+  .logo { width: 64px; height: 64px; border-radius: 16px; border: 3px solid var(--ink); }
+  .brand { display: flex; align-items: center; gap: 14px; font-family: var(--pop); font-weight: 800; font-size: 44px; letter-spacing: -.04em; }
+  .brand i { color: var(--pink); font-style: normal; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 14px; border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); font-weight: 600; font-size: 20px; background: var(--paper); }
+</style>
+</head>
+<body>
+
+<!-- 1. hero -->
+<section class="slide" id="s1">
+  <div style="position:absolute;left:70px;top:80px;width:520px">
+    <span class="tag">free · Windows 10 &amp; 11</span>
+    <h1 style="font-size:92px;margin-top:26px">Sing along.<br>Skip the <span class="hl">tab-hopping.</span></h1>
+    <p class="sub" style="margin-top:28px">Play anything. Lirico pops the words <b>right into your taskbar</b>, line by line, <b>right on the beat</b>.</p>
+  </div>
+  <div class="sticker" style="position:absolute;left:640px;top:120px;width:580px;height:400px;overflow:hidden;transform:rotate(1.5deg)">
+    <div class="desk" style="inset:0">
+      <div class="win" style="left:34px;top:30px;width:510px;height:270px">
+        <div class="tb">my homework (definitely)</div><div class="caps"><span>—</span><span>☐</span><span>✕</span></div>
+        <div class="line" style="top:72px;width:200px;background:#ffd6e8"></div><div class="line" style="top:100px;width:380px"></div>
+        <div class="line" style="top:124px;width:300px"></div><div class="line" style="top:210px;width:340px"></div>
+      </div>
+      <div class="task"><div class="wx"><i></i><div>23°C<br><span style="opacity:.6">sunny</span></div></div>
+        <div class="pill" style="left:118px;top:11px;height:36px;padding:0 18px;font-size:15px"><span class="t">City lights are humming low<span class="u" style="width:58%"></span></span></div>
+        <div class="ic start" style="left:350px"></div><div class="ic" style="left:396px"></div><div class="ic" style="left:442px"></div>
+        <div class="clock">10:42<br><span style="opacity:.7">vibes</span></div></div>
+    </div>
+  </div>
+  <div class="arrow" style="left:700px;top:560px;transform:rotate(-5deg)">↖ lyrics live here, not in another tab</div>
+  <span class="float" style="left:1180px;top:60px">♫</span><span class="float" style="left:600px;top:640px">♪</span><span class="float" style="left:1120px;top:600px">♬</span>
+</section>
+
+<!-- 2. taskbar -->
+<section class="slide" id="s2">
+  <div style="position:absolute;left:0;right:0;top:70px;text-align:center">
+    <h1 style="font-size:68px">Lives in your taskbar's <span class="hl m">empty space.</span></h1>
+    <p class="sub" style="margin-top:22px">One line at a time, on the beat. Works with YouTube, Spotify and any player.</p>
+  </div>
+  <div class="sticker" style="position:absolute;left:70px;top:330px;width:1130px;height:300px;overflow:hidden">
+    <div class="desk" style="inset:0">
+      <div class="win" style="left:60px;top:34px;width:1010px;height:200px"><div class="tb">Notes · weekend plans</div><div class="caps"><span>—</span><span>☐</span><span>✕</span></div>
+        <div class="line" style="top:74px;width:300px"></div><div class="line" style="top:100px;width:520px"></div></div>
+      <div class="task" style="height:62px"><div class="wx"><i></i><div>23°C<br><span style="opacity:.6">sunny</span></div></div>
+        <div class="pill" style="left:150px;top:12px;height:38px;padding:0 22px;font-size:17px"><span class="t">Hands up while the bassline rolls<span class="u" style="width:70%"></span></span></div>
+        <div class="ic start" style="left:470px"></div><div class="se" style="left:516px">Search</div><div class="ic" style="left:680px"></div><div class="ic" style="left:726px"></div><div class="ic" style="left:772px"></div>
+        <div class="clock">10:42<br><span style="opacity:.7">vibes</span></div></div>
+    </div>
+  </div>
+  <div class="arrow" style="left:150px;top:650px;transform:rotate(-3deg)">↑ the gap your taskbar wasn't using</div>
+  <span class="float" style="left:80px;top:90px">♪</span><span class="float" style="left:1160px;top:200px">♫</span>
+</section>
+
+<!-- 3. magnet -->
+<section class="slide" id="s3">
+  <div style="position:absolute;left:70px;top:110px;width:470px">
+    <span class="tag" style="background:var(--sun)">new in 1.2 🧲</span>
+    <h1 style="font-size:84px;margin-top:26px">Drag it. It <span class="hl">snaps.</span></h1>
+    <p class="sub" style="margin-top:26px">Into the taskbar, or onto <b>any app's title bar</b>. Switch apps and it waits in the taskbar, then hops back.</p>
+  </div>
+  <div class="sticker" style="position:absolute;left:590px;top:90px;width:620px;height:540px;overflow:hidden;transform:rotate(-1deg)">
+    <div class="desk" style="inset:0">
+      <div class="win" style="left:30px;top:40px;width:560px;height:400px"><div class="tb">main.py · VS Code</div><div class="caps"><span>—</span><span>☐</span><span>✕</span></div>
+        <div class="line" style="top:80px;width:240px;background:#d8f5eb"></div><div class="line" style="top:106px;width:420px"></div><div class="line" style="top:130px;width:360px"></div>
+        <div class="line" style="top:154px;width:280px"></div><div class="line" style="top:300px;width:400px"></div></div>
+      <div class="zone" style="left:250px;top:38px;width:198px;height:46px"></div>
+      <div class="pill" style="left:258px;top:44px;height:34px;padding:0 16px;font-size:14px;box-shadow:0 0 0 3px var(--pink)"><span class="t">Every window turns to gold<span class="u" style="width:45%"></span></span></div>
+      <div class="task"><div class="ic start" style="left:220px"></div><div class="ic" style="left:266px"></div><div class="ic" style="left:312px"></div><div class="clock">10:42<br><span style="opacity:.7">vibes</span></div></div>
+    </div>
+  </div>
+  <div class="arrow" style="left:860px;top:650px">click. stuck. 🧲</div>
+</section>
+
+<!-- 4. themes -->
+<section class="slide" id="s4">
+  <div style="position:absolute;left:0;right:0;top:56px;text-align:center">
+    <h1 style="font-size:80px">Pick a <span class="hl l">vibe.</span></h1>
+    <p class="sub" style="margin-top:18px">Six looks, then tweak every font, colour and animation.</p>
+  </div>
+  <div id="themes" style="position:absolute;left:70px;top:250px;width:1130px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px 30px"></div>
+</section>
+
+<!-- 5. languages -->
+<section class="slide" id="s5">
+  <div style="position:absolute;left:0;right:0;top:56px;text-align:center">
+    <h1 style="font-size:80px">Any language. <span class="hl s">Every word.</span></h1>
+    <p class="sub" style="margin-top:18px">Songs in other scripts show in <b>English letters</b> by default. Prefer the original? One switch.</p>
+  </div>
+  <div style="position:absolute;left:90px;top:250px;width:1090px;display:grid;grid-template-columns:1fr 1fr;gap:26px 34px" id="langs"></div>
+</section>
+
+<!-- 6. end card -->
+<section class="slide" id="s6">
+  <div style="position:absolute;left:0;right:0;top:120px;text-align:center">
+    <div class="brand" style="justify-content:center"><img class="logo" src="../../brand/logo.svg" alt=""><span>lirico<i>.</i></span></div>
+    <h1 style="font-size:96px;margin-top:34px">Your shower concerts<br>deserve <span class="hl">subtitles.</span></h1>
+    <div style="margin-top:44px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap">
+      <span class="chip" style="background:var(--sun)">free forever</span><span class="chip">open source (MIT)</span>
+      <span class="chip" style="background:#eafff7">no sign-up</span><span class="chip" style="background:#fff0f6">1 file · Windows 10 &amp; 11</span>
+    </div>
+    <p class="hand" style="margin-top:34px;font-size:34px">getlirico.pages.dev</p>
+  </div>
+  <span class="float" style="left:120px;top:110px">♪</span><span class="float" style="left:1110px;top:150px">♫</span><span class="float" style="left:180px;top:600px">♬</span><span class="float" style="left:1060px;top:610px">♩</span>
+</section>
+
+<script>
+const themes = [
+  ["Classic", "see-through, on your taskbar", "#fff8e6", "#17131f", "#2fd3a1", "City lights are humming low", ""],
+  ["Glass", "a soft frosted pill", "#eafff7", "rgba(23,19,31,.9)", "#7ee0c3", "Hands up while the bassline rolls", ""],
+  ["Neon", "glow for late nights", "#f2efff", "#0a0018", "#00f0ff", "Dancing in the neon rain", "neon"],
+  ["Pixel", "crisp, retro, blocky", "#fff8d6", "#000", "#39ff14", "Press start, sing along", "pixel"],
+  ["Future", "capitals, wide and cool", "#e9f7ff", "#050b18", "#4fc3ff", "SIGNALS FROM THE STARS", "future"],
+  ["Cutie", "pink underline + a tiny teddy", "#fff0f6", "#3a1430", "#ff6fb5", "Dil ki baatein, dheere dheere", "cutie"],
+];
+document.getElementById("themes").innerHTML = themes.map(([n, d, bg, pill, acc, line, k], i) => `
+  <div class="sticker" style="background:${bg};padding:20px 22px 24px;transform:rotate(${[-1.5, 1, -0.8, 1.2, -1, 1.4][i]}deg)">
+    <div style="font-family:var(--pop);font-weight:800;font-size:30px;letter-spacing:-.03em">${n}</div>
+    <div style="color:var(--soft);font-size:17px;margin-top:2px">${d}</div>
+    <div style="margin-top:16px;height:52px;border-radius:${k==="pixel"?0:20}px;background:${k===""&&i===0?"rgba(255,255,255,.7)":pill};display:grid;place-items:center;border:${i===0?"2px dashed rgba(23,19,31,.2)":"0"}">
+      <span style="position:relative;font-family:${k==="pixel"?"Consolas,monospace":k==="future"?"Bahnschrift,var(--body)":"'Segoe UI Variable Display','Segoe UI',var(--body)"};font-weight:${k==="future"?400:700};
+        letter-spacing:${k==="future"?".08em":"0"};font-size:18px;color:${i===0?"#17131f":"#fff"};${k==="neon"?`text-shadow:0 0 6px ${acc},0 0 12px ${acc}`:""}">${line}
+        <span style="position:absolute;left:0;bottom:-6px;height:${k==="cutie"?4:3}px;width:52%;background:${k==="pixel"?`repeating-linear-gradient(90deg,${acc} 0 5px,transparent 5px 8px)`:acc};border-radius:${k==="pixel"?0:2}px;${k==="neon"?`box-shadow:0 0 8px ${acc}`:""}"></span>
+        ${k==="cutie"?`<span style="position:absolute;left:49%;bottom:-16px;font-size:18px">🧸</span>`:""}</span>
+    </div></div>`).join("");
+const langs = [
+  ["Urdu", "ایسا دیکھا نہیں خوبصورت کوئی", "Aisa dekha nahi khoobsurat koi", "#fff0f6"],
+  ["Hindi", "तेरे बिना", "Tere bina", "#eafff7"],
+  ["Korean", "함께 노래해요", "Hamkke noraehaeyo", "#f2efff"],
+  ["Punjabi", "ਸੋਹਣਾ ਮੁੱਖੜਾ ਤੇਰਾ", "Sohna mukhra tera", "#fff8d6"],
+  ["Russian", "Я тебя люблю", "Ya tebya lyublyu", "#e9f7ff"],
+  ["Tamil", "நான் உன்னை", "Naan unnai", "#fff1e8"],
+];
+document.getElementById("langs").innerHTML = langs.map(([n, src, lat, bg], i) => `
+  <div class="sticker" style="background:${bg};padding:18px 24px;display:flex;align-items:center;gap:18px;transform:rotate(${[-1, 1, 0.8, -1.2, 1, -0.8][i]}deg)">
+    <div style="flex:0 0 96px;font-family:var(--hand);font-size:24px;color:var(--soft)">${n}</div>
+    <div style="flex:1"><div style="font-size:22px;color:var(--soft);font-family:'Nirmala UI','Segoe UI',sans-serif">${src}</div>
+      <div style="font-family:var(--pop);font-weight:800;font-size:30px;letter-spacing:-.02em;margin-top:2px">→ ${lat}</div></div></div>`).join("");
+const id = (location.hash || "#s1").slice(1);
+document.getElementById(id).classList.add("on");
+</script>
+</body>
+</html>

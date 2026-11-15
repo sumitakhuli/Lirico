@@ -7,7 +7,13 @@
 <meta name="description" content="Play anything. Lirico pops the lyrics into your taskbar, line by line, right on the beat. Free for Windows." />
 <meta property="og:title" content="Lirico — lyrics in your taskbar ♪" />
 <meta property="og:description" content="Sing along. Skip the tab-hopping. Free for Windows." />
-<meta property="og:image" content="assets/poster.png" />
+<meta property="og:image" content="https://getlirico.pages.dev/assets/og-hero.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://getlirico.pages.dev/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://getlirico.pages.dev/assets/og-hero.png" />
 <link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,7 +47,22 @@
          background: var(--sun); border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); transition: transform .12s, box-shadow .12s; }
   .get svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
   .nav-r { display: flex; align-items: center; gap: 12px; }
+  .gh .cup { font-size: 21px; line-height: 1; }
+  dialog.pop { margin: auto; width: min(440px, calc(100vw - 32px)); padding: 30px 28px 26px; color: var(--ink); background: var(--paper); text-align: center; }
+  dialog.pop::backdrop { background: rgba(23,19,31,.45); backdrop-filter: blur(3px); }
+  dialog.pop[open] { animation: popin .35s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes popin { from { transform: scale(.85) rotate(-2deg); opacity: 0; } }
+  .pop .pe { font-size: 46px; line-height: 1; }
+  .pop h3 { font-family: var(--pop); font-weight: 800; font-size: 30px; letter-spacing: -.03em; margin-top: 10px; }
+  .pop p { color: var(--soft); font-size: 16.5px; line-height: 1.55; margin-top: 10px; }
+  .pop .pa { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .pop .btn { font-size: 19px; padding: 14px 24px; }
+  .pop .coffee-btn { background: var(--sun); color: var(--ink); }
+  .pop .sec { font: 600 15px var(--body); color: var(--soft); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .pop .x { position: absolute; right: 14px; top: 12px; width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--ink); background: var(--bg); cursor: pointer; font-size: 14px; }
+  .og .overlay, .og .floaty { display: none !important; }
   .get { white-space: nowrap; }
+  @media (max-width: 400px) { .brand span { display: none; } }
   @media (max-width: 480px) { .get .fr { display: none; } .get { padding: 9px 12px; font-size: 15px; } .gh { width: 40px; height: 40px; } .nav-r { gap: 10px; } .brand { font-size: 24px; } }
   .gh { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--paper); color: var(--ink);
         border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); transition: transform .12s, box-shadow .12s; }
@@ -207,7 +228,7 @@
 <header>
   <div class="wrap bar">
     <a class="brand" href="#top"><img src="assets/logo.svg" alt="" /><span>lirico<i>.</i></span></a>
-    <div class="nav-r"><a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener" aria-label="Lirico on GitHub" title="Source on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a><a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download<span class="fr"> · free</span></a></div>
+    <div class="nav-r"><a class="gh" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener" data-pop="popCoffee" aria-label="Buy me a coffee" title="Buy me a coffee"><span class="cup" aria-hidden="true">☕</span></a><a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener" data-pop="popGit" aria-label="Lirico on GitHub" title="Lirico on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a><a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download<span class="fr"> · free</span></a></div>
   </div>
 </header>
 
@@ -292,7 +313,6 @@
         <a class="btn" href="/download?src=footer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
           Download for Windows</a>
-        <a class="coffee" id="coffee" target="_blank" rel="noopener">☕ buy me a coffee</a>
       </div>
       <div class="count" id="count">free · 1 file · no sign-up</div>
     </div>
@@ -308,12 +328,42 @@
   <footer>made with ♪ for people who sing at their desks</footer>
 </main>
 
+<dialog class="pop sticker" id="popGit" aria-labelledby="popGitT">
+  <button class="x" data-close aria-label="Close">✕</button>
+  <div class="pe">⭐</div>
+  <h3 id="popGitT">Star it. Shape it.</h3>
+  <p>Lirico is free, open source and made by one person. A star on GitHub helps more music lovers find it.</p>
+  <p>Got an idea, spotted a bug, or found a song it gets wrong? Open an issue or send a pull request. Every little bit makes the next version better.</p>
+  <div class="pa">
+    <a class="btn" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+    <a class="sec" href="https://github.com/sumitakhuli/Lirico/issues/new" target="_blank" rel="noopener">Share an idea or bug</a>
+  </div>
+</dialog>
+<dialog class="pop sticker" id="popCoffee" aria-labelledby="popCoffeeT">
+  <button class="x" data-close aria-label="Close">✕</button>
+  <div class="pe">☕</div>
+  <h3 id="popCoffeeT">Fuel the next verse</h3>
+  <p>Lirico is free, and it's staying that way. If it made your playlist a little louder, a coffee keeps the late-night fixes and new features coming.</p>
+  <div class="pa">
+    <a class="btn coffee-btn" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+    <button class="sec" data-close>Maybe later</button>
+  </div>
+</dialog>
+
 <div class="overlay" aria-hidden="true"><span class="line" id="ovLine"><span id="ovText">Sing along. Skip the tab-hopping.</span><span class="bar2" id="ovBar"></span></span></div>
 
 <script>
-// paste your Buy Me a Coffee / Ko-fi link here to show the coffee button
-const SUPPORT_URL = "";
-if (SUPPORT_URL) { const c = document.getElementById("coffee"); c.href = SUPPORT_URL; c.classList.add("on"); }
+// header GitHub / coffee buttons open a little popup first (links still work without JS)
+document.querySelectorAll("[data-pop]").forEach((a) => a.addEventListener("click", (e) => {
+  const d = document.getElementById(a.dataset.pop);
+  if (!d || typeof d.showModal !== "function") return;
+  e.preventDefault(); d.showModal();
+}));
+document.querySelectorAll("dialog.pop").forEach((d) => {
+  d.addEventListener("click", (e) => { if (e.target === d || e.target.closest("[data-close]")) d.close(); });
+  d.querySelectorAll("a.btn").forEach((a) => a.addEventListener("click", () => setTimeout(() => d.close(), 50)));
+});
+if (location.hash === "#og") document.documentElement.classList.add("og");   // share-image capture mode
 
 // visit count: no cookies, nothing personal
 try { navigator.sendBeacon("/api/hit", JSON.stringify({ path: location.pathname, ref: document.referrer })); } catch (e) {}
