@@ -47,7 +47,8 @@
          background: var(--sun); border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); transition: transform .12s, box-shadow .12s; }
   .get svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
   .nav-r { display: flex; align-items: center; gap: 12px; }
-  .gh .cup { font-size: 21px; line-height: 1; }
+  .pe-cup { display: grid; place-items: center; width: 74px; height: 74px; margin: 0 auto; border-radius: 22px; background: var(--sun); border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); transform: rotate(-4deg); }
+  .pe-cup svg { width: 44px; height: 44px; }
   dialog.pop { margin: auto; width: min(440px, calc(100vw - 32px)); padding: 30px 28px 26px; color: var(--ink); background: var(--paper); text-align: center; }
   dialog.pop::backdrop { background: rgba(23,19,31,.45); backdrop-filter: blur(3px); }
   dialog.pop[open] { animation: popin .35s cubic-bezier(.3,1.6,.5,1); }
@@ -228,7 +229,7 @@
 <header>
   <div class="wrap bar">
     <a class="brand" href="#top"><img src="assets/logo.svg" alt="" /><span>lirico<i>.</i></span></a>
-    <div class="nav-r"><a class="gh" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener" data-pop="popCoffee" aria-label="Buy me a coffee" title="Buy me a coffee"><span class="cup" aria-hidden="true">☕</span></a><a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener" data-pop="popGit" aria-label="Lirico on GitHub" title="Lirico on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a><a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download<span class="fr"> · free</span></a></div>
+    <div class="nav-r"><a class="gh" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener" data-pop="popCoffee" aria-label="Buy me a coffee" title="Buy me a coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h12.5v4.8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16.5 11h1.3a2.7 2.7 0 0 1 0 5.4h-1.6"/><path d="M8 6.2c0-1 1-1.2 1-2.2M12 6.2c0-1 1-1.2 1-2.2"/><path fill="#ff5fa2" stroke="none" d="M10.25 16.4l-2.1-2a1.25 1.25 0 0 1 1.77-1.77l.33.33.33-.33a1.25 1.25 0 0 1 1.77 1.77z"/></svg></a><a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener" data-pop="popGit" aria-label="Lirico on GitHub" title="Lirico on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a><a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download<span class="fr"> · free</span></a></div>
   </div>
 </header>
 
@@ -341,11 +342,11 @@
 </dialog>
 <dialog class="pop sticker" id="popCoffee" aria-labelledby="popCoffeeT">
   <button class="x" data-close aria-label="Close">✕</button>
-  <div class="pe">☕</div>
+  <div class="pe pe-cup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h12.5v4.8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16.5 11h1.3a2.7 2.7 0 0 1 0 5.4h-1.6"/><path d="M8 6.2c0-1 1-1.2 1-2.2M12 6.2c0-1 1-1.2 1-2.2"/><path fill="#ff5fa2" stroke="none" d="M10.25 16.4l-2.1-2a1.25 1.25 0 0 1 1.77-1.77l.33.33.33-.33a1.25 1.25 0 0 1 1.77 1.77z"/></svg></div>
   <h3 id="popCoffeeT">Fuel the next verse</h3>
   <p>Lirico is free, and it's staying that way. If it made your playlist a little louder, a coffee keeps the late-night fixes and new features coming.</p>
   <div class="pa">
-    <a class="btn coffee-btn" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+    <a class="btn coffee-btn" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h12.5v4.8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16.5 11h1.3a2.7 2.7 0 0 1 0 5.4h-1.6"/><path d="M8 6.2c0-1 1-1.2 1-2.2M12 6.2c0-1 1-1.2 1-2.2"/><path fill="#ff5fa2" stroke="none" d="M10.25 16.4l-2.1-2a1.25 1.25 0 0 1 1.77-1.77l.33.33.33-.33a1.25 1.25 0 0 1 1.77 1.77z"/></svg>Buy me a coffee</a>
     <button class="sec" data-close>Maybe later</button>
   </div>
 </dialog>
