@@ -25,7 +25,7 @@ Free, one file, Windows 10 / 11. No account, no setup.
 - Any language LRCLIB has. Hindi songs show in **English letters (Hinglish)** by default; Devanagari is one switch away.
 - Long lines wrap onto two balanced rows instead of being cut off.
 - Settings for font, size, colours, background, animations, hotkeys, with quick switches in the sidebar.
-- Starts with Windows and waits in the tray (turn off in Settings).
+- Starts with Windows and waits in the tray, and **updates itself**: new versions install in the background and Lirico restarts into them when nothing is playing (both can be turned off in Settings).
 
 > First launch: Windows SmartScreen may say "Windows protected your PC". Click
 > **More info → Run anyway** (the exe isn't code-signed yet).

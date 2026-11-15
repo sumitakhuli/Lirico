@@ -50,6 +50,7 @@ class Controller(QObject):
     snapshot_received = Signal(object)
     lyrics_ready = Signal(int, object)
     sync_ready = Signal(int, object)
+    update_ready = Signal(str)
 
     def __init__(self, app: QApplication, settings: Settings):
         super().__init__()
@@ -150,6 +151,18 @@ class Controller(QObject):
         if settings.auto_sync:
             self.autosync.start()
         self.sync_timer.start()
+        # auto-update: check shortly after start, then twice a day; restart when idle
+        from .updater import Updater, cleanup_old
+        cleanup_old()
+        self.updater = Updater(self.update_ready.emit)
+        self.update_ready.connect(self._on_update_ready)
+        self.update_timer = QTimer(self, interval=12 * 3600 * 1000)
+        self.update_timer.timeout.connect(self.check_for_update)
+        self.update_timer.start()
+        QTimer.singleShot(90_000, self.check_for_update)
+        self.idle_timer = QTimer(self, interval=15_000)
+        self.idle_timer.timeout.connect(self._restart_if_idle)
+        self._idle_since: Optional[float] = None
 
     # ------------------------------------------------------------------ media
     def _on_snapshot(self, snap: Optional[MediaSnapshot]) -> None:
@@ -324,6 +337,35 @@ class Controller(QObject):
         else:
             self.autosync.recorder.stop()
             self.sync_state, self.hold = SYNC_OFF, False
+
+    def check_for_update(self) -> None:
+        if self.settings.auto_update:
+            self.updater.check_async()
+
+    def _on_update_ready(self, version: str) -> None:
+        self.tray.notify("Lirico updated", f"Version {version} is installed. Lirico restarts into it "
+                                           "the next time nothing is playing.")
+        self._idle_since = None
+        self.idle_timer.start()
+
+    def _restart_if_idle(self) -> None:
+        playing = self.snap is not None and self.snap.playing
+        if playing or (self.settings_window is not None and self.settings_window.isVisible()):
+            self._idle_since = None
+            return
+        now = time.monotonic()
+        if self._idle_since is None:
+            self._idle_since = now
+        elif now - self._idle_since >= 60 and self.updater.restart():
+            log.info("restarting into version %s", self.updater.ready_version)
+            self.idle_timer.stop()
+            self.quit()
+
+    def set_auto_update(self, enabled: bool) -> None:
+        self.settings.auto_update = bool(enabled)
+        self.settings.save()
+        if enabled:
+            self.check_for_update()
 
     def set_telemetry(self, enabled: bool) -> None:
         if not enabled:

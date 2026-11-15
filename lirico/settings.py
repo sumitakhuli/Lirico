@@ -38,6 +38,7 @@ class Settings:
     titlebar_app: str = ""              # exe of the window the lyrics are attached to (title-bar mode)
     theme_preset: str = "classic"       # theme.PRESETS key; `theme` holds the user's tweaks on top
     autostart_setup: bool = False       # first-run "start with Windows" has been applied
+    auto_update: bool = True            # download new versions and restart into them when idle
     telemetry: bool = True              # anonymous usage counts (Settings -> Behavior to turn off)
     telemetry_notice: bool = False      # the one-time "we share anonymous counts" note was shown
     install_id: str = ""                # random id for the counts; linked to nobody

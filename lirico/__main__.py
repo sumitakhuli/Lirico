@@ -35,7 +35,8 @@ def main() -> int:
 
     lock = QLockFile(str(config_dir() / "lirico.lock"))
     lock.setStaleLockTime(0)
-    if not lock.tryLock(200):
+    # Right after an auto-update the old Lirico is still closing: wait for it.
+    if not lock.tryLock(20000 if "--after-update" in sys.argv else 200):
         QMessageBox.information(None, "Lirico", "Lirico is already running (look for it in the system tray).")
         return 0
     if not QSystemTrayIcon.isSystemTrayAvailable():

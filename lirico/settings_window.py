@@ -340,6 +340,8 @@ class SettingsWindow(QWidget):
         self._row(lay, "Share anonymous usage stats", self._toggle(lambda: st.telemetry, self.ctl.set_telemetry),
                   "Counts only (minutes used, songs found or not, app version). "
                   "Never song names, lyrics or audio")
+        self._row(lay, "Update automatically", self._toggle(lambda: st.auto_update, self.ctl.set_auto_update),
+                  "New versions install in the background; Lirico restarts into them when no song is playing")
         self._row(lay, "Start with Windows", self._toggle(self.ctl.autostart_enabled, self.ctl.set_autostart),
                   "Lirico starts quietly in the tray when you sign in")
 

@@ -358,3 +358,11 @@ def test_settings_keep_zero_offsets_and_migrate_hotkeys(tmp_path, monkeypatch):
     assert st.has_offset("t", "a") and st.offset_for("t", "a") == 0.0
     st.set_offset("t", "a", None)
     assert not st.has_offset("t", "a")
+
+
+# ---------------------------------------------------------------- auto-update
+def test_update_versions():
+    from lirico.updater import is_newer, parse_version
+    assert parse_version("v1.2.0") == (1, 2, 0) and parse_version("1.10") == (1, 10, 0)
+    assert is_newer("v1.3.0", "1.2.0") and is_newer("1.10.0", "1.9.9")
+    assert not is_newer("v1.2.0", "1.2.0") and not is_newer("1.1.9", "1.2.0")
