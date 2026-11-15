@@ -1,17 +1,12 @@
 {
-  // Lirico website + download counter + anonymous stats.
-  // Deploy:  cd web && npx wrangler deploy
-  "name": "lirico",
-  "main": "src/worker.js",
+  // Lirico website (Cloudflare Pages): static site + download counter + anonymous stats.
+  // public/_worker.js handles /download, /api/* and /stats; everything else is static.
+  // Deploy:  cd web && npx wrangler pages deploy
+  "name": "getlirico",
+  "pages_build_output_dir": "./public",
   "compatibility_date": "2026-11-01",
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "run_worker_first": ["/download", "/api/*", "/stats"]
-  },
   "d1_databases": [
     { "binding": "DB", "database_name": "lirico", "database_id": "166fca07-20df-4828-8c7b-3f792f0b5868",
       "migrations_dir": "migrations" }
-  ],
-  "observability": { "enabled": true }
+  ]
 }

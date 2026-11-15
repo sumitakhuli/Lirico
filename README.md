@@ -3,11 +3,11 @@
 Time-synced lyrics for whatever is playing on your Windows PC, line by line,
 **right in your taskbar** (or beside any window's minimise button, or floating anywhere).
 
-<p align="center"><a href="https://lirico.sumitakhuli5022.workers.dev"><img src="docs/demo.gif" alt="Lirico demo: lyrics in the taskbar, magnetic snapping, auto-sync" width="820"></a></p>
+<p align="center"><a href="https://getlirico.pages.dev"><img src="docs/demo.gif" alt="Lirico demo: lyrics in the taskbar, magnetic snapping, auto-sync" width="820"></a></p>
 
 <p align="center">
-  <a href="https://lirico.sumitakhuli5022.workers.dev/download?src=readme"><b>⬇ Download Lirico.exe</b></a> ·
-  <a href="https://lirico.sumitakhuli5022.workers.dev">Website</a> ·
+  <a href="https://getlirico.pages.dev/download?src=readme"><b>⬇ Download Lirico.exe</b></a> ·
+  <a href="https://getlirico.pages.dev">Website</a> ·
   <a href="https://github.com/sumitakhuli/Lirico/releases/latest/download/lirico-explainer.mp4">Watch the 25 s video (MP4)</a>
 </p>
 

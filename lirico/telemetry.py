@@ -23,7 +23,7 @@ from . import __version__
 
 log = logging.getLogger(__name__)
 
-ENDPOINT = "https://lirico.sumitakhuli5022.workers.dev/api/events"
+ENDPOINT = "https://getlirico.pages.dev/api/events"
 
 
 class Telemetry:

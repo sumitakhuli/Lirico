@@ -3,403 +3,361 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lirico — lyrics in your taskbar</title>
-<meta name="description" content="Free Windows app that shows time-synced lyrics for whatever is playing, line by line, right in your taskbar. YouTube, Spotify, any player." />
-<meta property="og:title" content="Lirico — lyrics in your taskbar" />
-<meta property="og:description" content="Sing along without switching tabs. Free for Windows." />
+<title>Lirico — lyrics in your taskbar ♪</title>
+<meta name="description" content="Play anything. Lirico pops the lyrics into your taskbar, line by line, right on the beat. Free for Windows." />
+<meta property="og:title" content="Lirico — lyrics in your taskbar ♪" />
+<meta property="og:description" content="Sing along. Skip the tab-hopping. Free for Windows." />
 <meta property="og:image" content="assets/poster.png" />
 <link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Gochi+Hand&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --ink: #0d0f15; --ink-2: #141823; --ink-3: #1b2030; --line: rgba(255,255,255,.09);
-    --text: #f4f5f9; --muted: rgba(244,245,249,.62); --faint: rgba(244,245,249,.36);
-    --mint: #7ee0c3; --coral: #ff8f7e; --lilac: #b9a6ff; --sun: #ffd76a;
-    --fun: "Bricolage Grotesque", "Outfit", system-ui, sans-serif;
-    --body: "Outfit", system-ui, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, monospace;
-    --gutter: clamp(16px, 5vw, 64px);
+    --bg: #fff6e6; --paper: #fffdf8; --ink: #17131f; --soft: #5b5566;
+    --pink: #ff5fa2; --mint: #2fd3a1; --sun: #ffd23f; --lilac: #8f7dff; --sky: #5ec8ff; --peach: #ff9a6b;
+    --pop: "Bricolage Grotesque", system-ui, sans-serif; --hand: "Gochi Hand", cursive; --body: "Outfit", system-ui, sans-serif;
+    --bw: 3px; --sh: 6px 6px 0 var(--ink); --sh-sm: 4px 4px 0 var(--ink);
+    --gutter: clamp(16px, 5vw, 56px);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: var(--ink); color: var(--text); font-family: var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow-x: hidden; -webkit-font-smoothing: antialiased;
+         background-image: repeating-linear-gradient(0deg, transparent 0 46px, rgba(23,19,31,.05) 46px 48px); }
   a { color: inherit; }
-  ::selection { background: var(--mint); color: var(--ink); }
-  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter); }
-
-  /* soft colour blobs that drift */
-  .sky { position: fixed; inset: -20vh -20vw; z-index: -1; pointer-events: none; filter: blur(70px); opacity: .55; }
-  .sky i { position: absolute; width: 38vw; height: 38vw; border-radius: 50%; animation: drift 24s ease-in-out infinite alternate; }
-  .sky i:nth-child(1) { background: #1f6b5a; left: 55%; top: 5%; }
-  .sky i:nth-child(2) { background: #3a2d6e; left: 0%; top: 45%; animation-duration: 30s; }
-  .sky i:nth-child(3) { background: #5a2a2a; left: 70%; top: 70%; animation-duration: 36s; opacity: .7; }
-  @keyframes drift { to { transform: translate(-8vw, 6vh) scale(1.15); } }
+  ::selection { background: var(--pink); color: #fff; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--gutter); }
+  main { overflow-x: clip; }
+  .sticker { border: var(--bw) solid var(--ink); box-shadow: var(--sh); border-radius: 20px; background: var(--paper); }
 
   /* header */
-  header { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-           background: rgba(13,15,21,.55); border-bottom: 1px solid transparent; transition: border-color .3s; }
-  header.scrolled { border-bottom-color: var(--line); }
-  .bar { display: flex; align-items: center; justify-content: space-between; height: 68px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--fun); font-weight: 800; font-size: 26px; letter-spacing: -.03em; }
-  .brand img { width: 34px; height: 34px; transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
-  .brand:hover img { transform: rotate(-12deg) scale(1.08); }
-  .brand i { font-style: normal; color: var(--mint); }
-  .nav { display: flex; gap: 8px; align-items: center; }
-  .nav a { text-decoration: none; font-size: 15px; color: var(--muted); padding: 8px 12px; border-radius: 10px; transition: color .2s, background .2s; }
-  .nav a:hover { color: var(--text); background: rgba(255,255,255,.05); }
-  .nav .gh { display: inline-flex; align-items: center; gap: 8px; }
-  @media (max-width: 640px) { .nav a:not(.gh) { display: none; } }
+  header { position: sticky; top: 0; z-index: 40; background: rgba(255,246,230,.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--pop); font-weight: 800; font-size: 28px; letter-spacing: -.04em; }
+  .brand img { width: 38px; height: 38px; border-radius: 10px; border: 2.5px solid var(--ink); transition: transform .35s cubic-bezier(.3,1.7,.5,1); }
+  .brand:hover img { transform: rotate(-14deg) scale(1.1); }
+  .brand i { color: var(--pink); font-style: normal; }
+  .get { text-decoration: none; font-family: var(--pop); font-weight: 800; font-size: 16px; padding: 10px 16px; border-radius: 14px;
+         background: var(--sun); border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); transition: transform .12s, box-shadow .12s; }
+  .get:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
 
   /* hero */
-  .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(28px, 4vw, 64px); align-items: center; padding: clamp(36px, 7vh, 80px) 0 40px; }
-  .kicker { display: inline-flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 13px; color: var(--ink);
-            background: var(--sun); padding: 6px 12px; border-radius: 999px; transform: rotate(-2deg); box-shadow: 3px 3px 0 #000; }
-  h1 { font-family: var(--fun); font-weight: 800; font-size: clamp(48px, 7vw, 104px); line-height: .92; letter-spacing: -.05em; margin-top: 24px; }
-  h1 .ul { position: relative; display: inline-block; color: var(--mint); }
-  h1 .ul svg { position: absolute; left: -2%; bottom: -.12em; width: 104%; height: .32em; overflow: visible; }
-  h1 .ul path { stroke: var(--mint); stroke-width: 6; fill: none; stroke-linecap: round; stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw 1.2s .6s cubic-bezier(.6,0,.2,1) forwards; }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-  .lede { margin-top: 26px; font-size: clamp(17px, 1.45vw, 20px); line-height: 1.6; color: var(--muted); max-width: 33em; font-weight: 300; }
-  .lede b { color: var(--text); font-weight: 500; }
-  .cta { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: center; }
-  .btn { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 18px 28px; border-radius: 18px;
-         background: var(--mint); color: var(--ink); font-family: var(--fun); font-weight: 700; font-size: 20px; text-decoration: none;
-         box-shadow: 0 6px 0 #3f9c80, 0 18px 40px -12px rgba(126,224,195,.7); transition: transform .12s, box-shadow .12s; }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #3f9c80, 0 24px 50px -12px rgba(126,224,195,.8); }
-  .btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #3f9c80, 0 10px 30px -12px rgba(126,224,195,.6); }
-  .btn svg { width: 22px; height: 22px; }
-  .btn-ghost { display: inline-flex; align-items: center; gap: 10px; padding: 16px 20px; border-radius: 16px; border: 1.5px solid var(--line);
-               text-decoration: none; font-weight: 500; transition: border-color .2s, transform .2s; }
-  .btn-ghost:hover { border-color: rgba(255,255,255,.3); transform: translateY(-1px); }
-  .coffee { display: none; align-items: center; gap: 8px; padding: 14px 18px; border-radius: 16px; text-decoration: none; font-weight: 500;
-            color: #ffd27a; background: rgba(255,210,122,.08); border: 1.5px solid rgba(255,210,122,.25); }
+  .hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 60px); align-items: center; padding-top: clamp(28px, 6vh, 64px); padding-bottom: 56px; }
+  .tag { display: inline-block; font-family: var(--hand); font-size: 22px; background: var(--mint); border: 2.5px solid var(--ink);
+         padding: 3px 14px; border-radius: 999px; transform: rotate(-3deg); box-shadow: var(--sh-sm); }
+  h1 { font-family: var(--pop); font-weight: 800; font-size: clamp(50px, 7.4vw, 108px); line-height: .9; letter-spacing: -.055em; margin-top: 22px; }
+  h1 .hl { position: relative; white-space: nowrap; z-index: 0; }
+  h1 .hl::before { content: ""; position: absolute; z-index: -1; left: -.08em; right: -.08em; top: .52em; bottom: .02em; background: var(--pink);
+                   transform: rotate(-1.5deg) scaleX(0); transform-origin: left; animation: swipe .7s .5s cubic-bezier(.6,0,.2,1) forwards; border-radius: 6px; }
+  @keyframes swipe { to { transform: rotate(-1.5deg) scaleX(1); } }
+  h1 .strike { position: relative; color: var(--soft); }
+  h1 .strike::after { content: ""; position: absolute; left: -2%; right: -2%; top: 52%; height: .09em; background: var(--ink); border-radius: 9px; transform: rotate(-4deg); }
+  .lede { margin-top: 22px; font-size: clamp(18px, 1.6vw, 22px); line-height: 1.5; max-width: 26em; color: var(--soft); }
+  .lede b { color: var(--ink); }
+  .cta { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 12px; padding: 18px 28px; border-radius: 20px; background: var(--pink); color: #fff;
+         font-family: var(--pop); font-weight: 800; font-size: 22px; text-decoration: none; border: var(--bw) solid var(--ink); box-shadow: var(--sh);
+         transition: transform .12s, box-shadow .12s; }
+  .btn:hover { transform: translate(-3px,-3px) rotate(-1deg); box-shadow: 9px 9px 0 var(--ink); }
+  .btn:active { transform: translate(4px,4px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn svg { width: 24px; height: 24px; }
+  .small { font-size: 15px; color: var(--soft); line-height: 1.5; }
+  .small b { color: var(--ink); }
+  .coffee { display: none; text-decoration: none; font-weight: 600; padding: 14px 18px; border-radius: 16px; background: var(--paper);
+            border: 2.5px solid var(--ink); box-shadow: var(--sh-sm); }
   .coffee.on { display: inline-flex; }
-  .meta { margin-top: 16px; font-family: var(--mono); font-size: 13px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 16px; }
-  .meta b { color: var(--mint); font-weight: 500; }
 
-  /* the playground: a tiny Windows desktop you can play with */
+  /* playground */
   .play-wrap { position: relative; }
-  .play-hint { position: absolute; z-index: 5; right: 10px; top: -18px; font-family: var(--fun); font-weight: 700; font-size: 17px;
-               color: var(--ink); background: var(--coral); padding: 6px 12px; border-radius: 12px; transform: rotate(3deg);
-               box-shadow: 3px 3px 0 #000; animation: bob 2.4s ease-in-out infinite; }
-  @keyframes bob { 50% { transform: rotate(3deg) translateY(-5px); } }
-  .play { position: relative; width: 100%; aspect-ratio: 8 / 5; border-radius: 20px; overflow: hidden; border: 1px solid var(--line);
-          box-shadow: 0 40px 100px -30px rgba(0,0,0,.9), 0 0 0 6px rgba(255,255,255,.02); touch-action: none; user-select: none; }
+  .vinyl { position: absolute; z-index: 0; right: -46px; top: -56px; width: 170px; height: 170px; border-radius: 50%;
+           background: radial-gradient(circle, var(--pink) 0 15%, var(--ink) 15.5% 17%, #2a2433 17.5% 30%, #17131f 30.5% 31.5%, #2a2433 32% 44%, #17131f 44.5% 45.5%, #2a2433 46% 100%);
+           border: var(--bw) solid var(--ink); animation: spin 4s linear infinite; }
+  .vinyl::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--bg); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .try { position: absolute; z-index: 3; left: -18px; bottom: -48px; font-family: var(--hand); font-size: 26px; transform: rotate(-6deg); }
+  .try svg { width: 60px; height: 40px; vertical-align: middle; }
+  .play { position: relative; z-index: 1; aspect-ratio: 8 / 5; overflow: hidden; touch-action: none; user-select: none; }
   .stage { position: absolute; left: 0; top: 0; width: 800px; height: 500px; transform-origin: 0 0;
-           background: radial-gradient(600px 300px at 80% 0%, rgba(126,224,195,.22), transparent 60%),
-                       radial-gradient(500px 300px at 0% 100%, rgba(140,120,255,.25), transparent 60%), linear-gradient(160deg, #1a2032, #0c0e14); }
-  .win { position: absolute; left: 40px; top: 30px; width: 720px; height: 380px; border-radius: 12px; background: #12151d;
-         border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.5); overflow: hidden; }
-  .win .tb { height: 40px; background: #1a1e29; display: flex; align-items: center; padding-left: 14px; font-size: 12.5px; color: rgba(255,255,255,.6); }
+           background: linear-gradient(135deg, #ffd9ec 0%, #ffe9b8 45%, #c9f3e6 100%); }
+  .win { position: absolute; left: 40px; top: 30px; width: 720px; height: 380px; border-radius: 12px; background: #fff; border: 2px solid rgba(23,19,31,.15);
+         box-shadow: 0 18px 40px rgba(23,19,31,.15); overflow: hidden; }
+  .win .tb { height: 40px; background: #f3f1f6; display: flex; align-items: center; padding-left: 14px; font-size: 13px; color: #6a6475; }
   .caps { position: absolute; right: 0; top: 0; display: flex; }
-  .caps span { width: 46px; height: 40px; display: grid; place-items: center; color: rgba(255,255,255,.75); font-size: 13px; }
-  .caps span:last-child:hover { background: #c42b1c; }
-  .win .l { position: absolute; left: 24px; height: 9px; border-radius: 5px; background: #242a3a; }
-  .win .say { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-family: var(--fun); font-weight: 700; font-size: 26px; color: rgba(255,255,255,.18); letter-spacing: -.02em; }
-  .task { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: rgba(22,25,33,.96); border-top: 1px solid rgba(255,255,255,.06); }
-  .task .wx { position: absolute; left: 14px; top: 9px; display: flex; gap: 8px; align-items: center; font-size: 11px; color: rgba(255,255,255,.8); line-height: 1.2; }
+  .caps span { width: 46px; height: 40px; display: grid; place-items: center; color: #2a2433; font-size: 14px; }
+  .win .l { position: absolute; left: 24px; height: 10px; border-radius: 5px; background: #eceaf1; }
+  .win .say { position: absolute; left: 0; right: 0; top: 160px; text-align: center; font-family: var(--hand); font-size: 30px; color: #b9b3c4; transition: color .3s; }
+  .task { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: rgba(255,255,255,.82); border-top: 1px solid rgba(23,19,31,.08); }
+  .task .wx { position: absolute; left: 14px; top: 9px; display: flex; gap: 8px; align-items: center; font-size: 11px; color: #3a3442; line-height: 1.2; }
   .task .wx i { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #ffe08a, #f2a33a); }
-  .task .ic { position: absolute; top: 8px; width: 32px; height: 32px; border-radius: 9px; background: #2b3242; }
+  .task .ic { position: absolute; top: 8px; width: 32px; height: 32px; border-radius: 9px; background: #e7e4ee; }
   .task .start { background: linear-gradient(135deg, #4cc2ff, #1677e0); }
-  .task .se { position: absolute; left: 418px; top: 10px; width: 120px; height: 28px; border-radius: 14px; background: #2a2f3c; font-size: 11px; color: rgba(255,255,255,.5); padding: 7px 0 0 30px; }
-  .task .clock { position: absolute; right: 14px; top: 9px; font-size: 11px; text-align: right; color: rgba(255,255,255,.8); line-height: 1.3; }
-  .zone { position: absolute; border: 2px dashed var(--mint); border-radius: 20px; opacity: 0; transition: opacity .2s, box-shadow .2s;
-          box-shadow: inset 0 0 18px rgba(126,224,195,.35); pointer-events: none; }
-  .zone.on { opacity: 1; box-shadow: inset 0 0 24px rgba(126,224,195,.55), 0 0 22px rgba(126,224,195,.4); }
-  .pill { position: absolute; display: grid; place-items: center; border-radius: 22px; background: rgba(14,16,20,.8);
-          border: 1px solid rgba(255,255,255,.08); cursor: grab; overflow: hidden; touch-action: none;
-          font-family: "Segoe UI Variable Display", "Segoe UI", var(--body); font-weight: 600; color: #fff;
-          transition: left .38s cubic-bezier(.3,1.4,.5,1), top .38s cubic-bezier(.3,1.4,.5,1), width .3s, height .3s, font-size .3s, box-shadow .2s; }
-  .pill.drag { cursor: grabbing; transition: width .25s, height .25s, font-size .25s; box-shadow: 0 16px 34px rgba(0,0,0,.55), 0 0 0 2px var(--mint); }
-  .pill .txt { position: relative; white-space: nowrap; text-shadow: 1px 1px 0 rgba(0,0,0,.6); transition: opacity .2s, transform .2s; }
+  .task .se { position: absolute; left: 418px; top: 10px; width: 120px; height: 28px; border-radius: 14px; background: #efedf3; font-size: 11px; color: #8a8496; padding: 7px 0 0 30px; }
+  .task .clock { position: absolute; right: 14px; top: 9px; font-size: 11px; text-align: right; color: #3a3442; line-height: 1.3; }
+  .zone { position: absolute; border: 2.5px dashed var(--pink); border-radius: 20px; opacity: 0; transition: opacity .2s; background: rgba(255,95,162,.12); pointer-events: none; }
+  .zone.on { opacity: 1; }
+  .pill { position: absolute; display: grid; place-items: center; border-radius: 22px; background: rgba(23,19,31,.88); color: #fff; cursor: grab; overflow: hidden;
+          touch-action: none; font-family: "Segoe UI Variable Display", "Segoe UI", var(--body); font-weight: 600;
+          transition: left .38s cubic-bezier(.3,1.5,.5,1), top .38s cubic-bezier(.3,1.5,.5,1), width .3s, height .3s, font-size .3s, box-shadow .2s; }
+  .pill.drag { cursor: grabbing; transition: width .25s, height .25s, font-size .25s; box-shadow: 0 14px 30px rgba(23,19,31,.35), 0 0 0 3px var(--pink); }
+  .pill .txt { position: relative; white-space: nowrap; transition: opacity .2s, transform .2s; }
   .pill .txt.out { opacity: 0; transform: translateY(-6px); }
   .pill .u { position: absolute; left: 0; bottom: -4px; height: 2.5px; border-radius: 2px; background: var(--mint); width: 0; }
-  .ring { position: absolute; border: 3px solid var(--mint); border-radius: 24px; pointer-events: none; animation: ring .6s ease-out forwards; }
-  @keyframes ring { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.3); } }
+  .ring { position: absolute; border: 3px solid var(--pink); border-radius: 24px; pointer-events: none; animation: ring .6s ease-out forwards; }
+  @keyframes ring { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.35); } }
+
+  /* ticker */
+  .ticker { margin: 26px 0 0; background: var(--ink); color: var(--bg); border-block: var(--bw) solid var(--ink); transform: rotate(-1.5deg); overflow: hidden; }
+  .ticker div { display: flex; width: max-content; gap: 34px; padding: 14px 0; font-family: var(--pop); font-weight: 800; font-size: 26px; animation: tick 22s linear infinite; }
+  .ticker span:nth-child(4n+1) { color: var(--sun); } .ticker span:nth-child(4n+2) { color: var(--mint); }
+  .ticker span:nth-child(4n+3) { color: var(--pink); } .ticker span:nth-child(4n) { color: var(--sky); }
+  @keyframes tick { to { transform: translateX(-50%); } }
 
   /* sections */
-  section { padding: clamp(80px, 12vh, 130px) 0 0; }
-  .label { font-family: var(--mono); font-size: 13px; color: var(--faint); margin-bottom: 18px; }
-  .label b { color: var(--mint); font-weight: 500; }
-  h2 { font-family: var(--fun); font-weight: 800; font-size: clamp(36px, 5vw, 68px); line-height: .98; letter-spacing: -.045em; }
-  h2 .m { color: var(--mint); } h2 .c { color: var(--coral); } h2 .l { color: var(--lilac); }
-  .sub { margin-top: 18px; color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 40em; font-weight: 300; }
+  section.wrap { padding-top: clamp(80px, 12vh, 120px); }
+  h2 { font-family: var(--pop); font-weight: 800; font-size: clamp(38px, 5.4vw, 70px); line-height: .95; letter-spacing: -.05em; }
+  h2 .p { color: var(--pink); } h2 .m { color: #14a77c; } h2 .l { color: var(--lilac); }
+  .hand { font-family: var(--hand); font-size: 24px; color: var(--soft); margin-top: 8px; }
 
-  .screen { margin-top: 36px; position: relative; border-radius: 22px; padding: 10px; background: linear-gradient(180deg, #1c2030, #10131b);
-            border: 1px solid var(--line); box-shadow: 0 50px 120px -40px rgba(0,0,0,.85); }
-  .screen video { display: block; width: 100%; aspect-ratio: 16/9; border-radius: 14px; background: #0b0d12; }
+  .steps { margin-top: 34px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+  .step { padding: 26px 24px 28px; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .step:nth-child(1) { background: #fff0f6; transform: rotate(-2deg); }
+  .step:nth-child(2) { background: #eafff7; transform: rotate(1.5deg) translateY(14px); }
+  .step:nth-child(3) { background: #fff8d6; transform: rotate(-1deg); }
+  .step:hover { transform: rotate(0) translateY(-6px) scale(1.02); }
+  .step .n { font-family: var(--pop); font-weight: 800; font-size: 20px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%;
+             border: 2.5px solid var(--ink); background: var(--paper); }
+  .step .e { font-size: 44px; margin-top: 14px; }
+  .step h3 { font-family: var(--pop); font-weight: 800; font-size: 30px; letter-spacing: -.03em; margin-top: 6px; }
+  .step p { margin-top: 6px; font-size: 17px; color: var(--soft); }
 
-  .sheet { list-style: none; margin-top: 30px; }
-  .sheet li { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, .95fr); gap: 10px 32px; padding: 26px 0; border-top: 1px solid var(--line);
-              align-items: baseline; transition: opacity .45s, transform .45s; }
-  .sheet li:last-child { border-bottom: 1px solid var(--line); }
-  .sheet li:not(.on) { opacity: .35; }
-  .sheet li.on { transform: translateX(6px); }
-  .sheet .ts { font-family: var(--mono); font-size: 14px; }
-  .sheet li:nth-child(4n+1) .ts { color: var(--mint); } .sheet li:nth-child(4n+2) .ts { color: var(--coral); }
-  .sheet li:nth-child(4n+3) .ts { color: var(--lilac); } .sheet li:nth-child(4n) .ts { color: var(--sun); }
-  .sheet h3 { font-family: var(--fun); font-size: clamp(24px, 2.6vw, 34px); font-weight: 700; letter-spacing: -.03em; line-height: 1.12; }
-  .sheet p { color: var(--muted); font-size: 16.5px; line-height: 1.6; font-weight: 300; }
-  .sheet kbd { font-family: var(--mono); font-size: 13px; background: var(--ink-3); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 7px; padding: 1px 6px; }
+  .screen { margin-top: 30px; padding: 12px; background: var(--ink); border-radius: 26px; border: var(--bw) solid var(--ink); box-shadow: 10px 10px 0 var(--pink); }
+  .screen video { display: block; width: 100%; aspect-ratio: 16/9; border-radius: 16px; background: #0b0d12; }
 
-  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
-  .wave { border: 1px solid var(--line); border-radius: 22px; padding: 26px; background: var(--ink-2); }
-  .bars { display: flex; align-items: center; gap: 4px; height: 120px; }
-  .bars span { flex: 1; border-radius: 3px; background: rgba(255,255,255,.14); transform-origin: center; }
-  .bars span.s { background: var(--mint); animation: beat 1.1s ease-in-out infinite; }
-  @keyframes beat { 50% { transform: scaleY(.55); } }
-  .wave .row { margin-top: 18px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-family: var(--mono); font-size: 13px; color: var(--faint); }
-  .wave .ok { color: var(--mint); }
-  .wave .lyr { margin-top: 18px; display: inline-block; padding: 10px 18px; border-radius: 14px; background: rgba(14,16,20,.8); font-weight: 600; position: relative; }
-  .wave .lyr .u { position: absolute; left: 18px; bottom: 7px; height: 2.5px; background: var(--mint); border-radius: 2px; animation: sweep 2.6s linear infinite; }
-  @keyframes sweep { from { width: 0; } to { width: calc(100% - 36px); } }
+  .stickers { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 18px 20px; }
+  .st { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; max-width: 360px; flex: 1 1 280px;
+        transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .st:nth-child(odd) { transform: rotate(-1.4deg); } .st:nth-child(even) { transform: rotate(1.2deg); }
+  .st:hover { transform: rotate(0) scale(1.04); }
+  .st .e { font-size: 34px; line-height: 1; }
+  .st b { font-family: var(--pop); font-size: 21px; letter-spacing: -.02em; display: block; }
+  .st span { color: var(--soft); font-size: 15.5px; }
+  .st:nth-child(6n+1) { background: #fff0f6; } .st:nth-child(6n+2) { background: #eafff7; } .st:nth-child(6n+3) { background: #f2efff; }
+  .st:nth-child(6n+4) { background: #fff8d6; } .st:nth-child(6n+5) { background: #e9f7ff; } .st:nth-child(6n) { background: #fff1e8; }
 
-  .final { text-align: center; padding-bottom: 30px; }
-  .final .mark { width: 110px; height: 110px; margin: 0 auto 26px; display: block; animation: wob 3.4s ease-in-out infinite; }
-  @keyframes wob { 50% { transform: rotate(-6deg) translateY(-6px); } }
+  .final { margin: clamp(90px, 13vh, 140px) 0 0; padding: clamp(36px, 6vw, 64px) clamp(20px, 5vw, 60px); text-align: center; position: relative; overflow: hidden;
+           background: var(--sun); }
+  .final h2 { max-width: 13em; margin: 0 auto; }
+  .eq { display: flex; justify-content: center; align-items: flex-end; gap: 6px; height: 54px; margin-bottom: 20px; }
+  .eq i { width: 12px; border-radius: 4px; border: 2px solid var(--ink); background: var(--pink); animation: eq 1s ease-in-out infinite; }
+  .eq i:nth-child(2) { background: var(--mint); animation-delay: -.3s; } .eq i:nth-child(3) { background: var(--lilac); animation-delay: -.6s; }
+  .eq i:nth-child(4) { background: var(--sky); animation-delay: -.15s; } .eq i:nth-child(5) { background: var(--peach); animation-delay: -.45s; }
+  @keyframes eq { 0%, 100% { height: 20%; } 50% { height: 100%; } }
   .final .cta { justify-content: center; }
-  .count { margin-top: 18px; font-family: var(--mono); font-size: 14px; color: var(--faint); }
-  .count b { color: var(--mint); font-size: 18px; }
-  .faq { max-width: 760px; margin: 50px auto 0; text-align: left; }
-  details { border-bottom: 1px solid var(--line); padding: 18px 2px; }
-  summary { cursor: pointer; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 20px; }
-  summary::after { content: "+"; font-family: var(--mono); color: var(--mint); transition: transform .2s; }
-  details[open] summary::after { transform: rotate(45deg); }
-  details p { margin-top: 10px; color: var(--muted); line-height: 1.65; font-weight: 300; }
-  footer { padding: 70px 0 130px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; font-family: var(--mono); font-size: 12.5px; color: var(--faint); }
+  .count { margin-top: 18px; font-family: var(--hand); font-size: 24px; }
 
-  /* the page's own Lirico */
-  .overlay { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 28px);
-             padding: 10px 22px 13px; border-radius: 16px; background: rgba(14,16,20,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-             border: 1px solid rgba(255,255,255,.08); pointer-events: none; font-family: "Segoe UI Variable Display", "Segoe UI", var(--body); }
+  .faq { max-width: 760px; margin: 60px auto 0; }
+  details { padding: 18px 22px; margin-bottom: 14px; }
+  summary { cursor: pointer; list-style: none; font-family: var(--pop); font-weight: 800; font-size: 21px; display: flex; justify-content: space-between; gap: 16px; }
+  summary::after { content: "+"; transition: transform .2s; } details[open] summary::after { transform: rotate(45deg); }
+  details p { margin-top: 8px; color: var(--soft); font-size: 17px; line-height: 1.55; }
+  footer { text-align: center; padding: 60px 0 140px; font-family: var(--hand); font-size: 22px; color: var(--soft); }
+
+  /* the page's own lyric pill */
+  .overlay { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 28px); padding: 10px 22px 13px;
+             border-radius: 18px; background: rgba(23,19,31,.9); color: #fff; pointer-events: none; box-shadow: 0 10px 30px rgba(23,19,31,.25);
+             font-family: "Segoe UI Variable Display", "Segoe UI", var(--body); }
   .overlay .line { position: relative; display: inline-block; font-size: clamp(14px, 1.5vw, 19px); font-weight: 600; transition: opacity .22s, transform .22s; }
   .overlay .line.out { opacity: 0; transform: translateY(-8px); }
-  .overlay .bar2 { position: absolute; left: 0; bottom: -4px; height: 2px; border-radius: 2px; background: var(--mint); width: 0; }
+  .overlay .bar2 { position: absolute; left: 0; bottom: -4px; height: 2.5px; border-radius: 2px; background: var(--mint); width: 0; }
 
-  /* little notes that float up */
-  .note { position: fixed; z-index: 60; pointer-events: none; font-size: 22px; animation: rise 1.4s ease-out forwards; }
-  @keyframes rise { to { transform: translate(var(--dx), -140px) rotate(var(--r)); opacity: 0; } }
-  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  .note { position: fixed; z-index: 60; pointer-events: none; font-size: 26px; animation: rise 1.4s ease-out forwards; }
+  @keyframes rise { to { transform: translate(var(--dx), -150px) rotate(var(--r)); opacity: 0; } }
+  .floaty { position: absolute; pointer-events: none; font-size: 30px; opacity: .55; animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty { 50% { transform: translateY(-16px) rotate(10deg); } }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
   .reveal.in { opacity: 1; transform: none; }
 
-  @media (max-width: 920px) {
-    .hero, .split { grid-template-columns: minmax(0, 1fr); }
-    .sheet li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-    .play-hint { right: 6px; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    .steps { grid-template-columns: minmax(0, 1fr); }
+    .step:nth-child(2) { transform: rotate(1.5deg); }
+    .vinyl { width: 110px; height: 110px; right: -10px; top: -40px; }
+    .try { left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal { opacity: 1; transform: none; }
-    h1 .ul path { stroke-dashoffset: 0; }
+    h1 .hl::before { transform: rotate(-1.5deg); }
   }
 </style>
 </head>
 <body>
-<div class="sky" aria-hidden="true"><i></i><i></i><i></i></div>
-
-<header id="hdr">
+<header>
   <div class="wrap bar">
     <a class="brand" href="#top"><img src="assets/logo.svg" alt="" /><span>lirico<i>.</i></span></a>
-    <nav class="nav">
-      <a href="#watch">Watch</a><a href="#how">How it works</a><a href="#download">Download</a>
-      <a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
-    </nav>
+    <a class="get" href="#get">Get it ↓</a>
   </div>
 </header>
 
-<main id="top" class="wrap">
-  <div class="hero">
+<main id="top">
+  <div class="wrap hero">
     <div>
-      <span class="kicker">♪ free · for Windows 10 &amp; 11</span>
-      <h1 data-lyric="Sing along without switching tabs.">Sing along, <span class="ul">no tab
-        <svg viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M2 14 C 40 4, 80 18, 120 9 S 180 6, 198 12"/></svg></span> switching.</h1>
-      <p class="lede">Lirico shows the lyrics of <b>whatever's playing on your PC</b> (YouTube, Spotify, anything), line by line and right on beat,
-        <b>tucked into your taskbar</b>. Keep working. The words come to you.</p>
+      <span class="tag">free · Windows 10 &amp; 11</span>
+      <h1 data-lyric="Sing along. Skip the tab-hopping.">Sing along.<br />Skip the <span class="hl">tab-hopping.</span></h1>
+      <p class="lede">Play anything. Lirico pops the words <b>right into your taskbar</b>, line by line, <b>right on the beat</b>.</p>
       <div class="cta">
-        <a class="btn" id="dl1" href="/download?src=hero">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
-          Download Lirico</a>
-        <a class="btn-ghost" href="#watch">▶ Watch it (25s)</a>
+        <a class="btn" href="/download?src=hero">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+          Get Lirico. It's free</a>
+        <div class="small"><b>1 file</b> · no sign-up<br />starts itself, stays chill</div>
       </div>
-      <div class="meta"><span>one .exe · no account</span><span>auto-starts quietly</span><span id="dlcount"></span></div>
     </div>
 
     <div class="play-wrap">
-      <div class="play-hint">drag the lyrics ↓</div>
-      <div class="play" id="play" aria-label="Try it: drag the lyrics to the taskbar or next to the window buttons">
+      <div class="vinyl" aria-hidden="true"></div>
+      <div class="play sticker" id="play" aria-label="Try it: drag the lyrics">
         <div class="stage" id="stage">
           <div class="win">
-            <div class="tb">Notes — weekend plans</div>
+            <div class="tb">my homework (definitely)</div>
             <div class="caps"><span>—</span><span>☐</span><span>✕</span></div>
-            <div class="l" style="top:58px;width:240px;background:#2d3550"></div>
-            <div class="l" style="top:82px;width:520px"></div><div class="l" style="top:104px;width:430px"></div>
-            <div class="l" style="top:290px;width:340px"></div><div class="l" style="top:312px;width:500px"></div>
-            <div class="say" id="say">drag me anywhere ✦</div>
+            <div class="l" style="top:62px;width:240px;background:#ffd6e8"></div>
+            <div class="l" style="top:88px;width:520px"></div><div class="l" style="top:110px;width:430px"></div>
+            <div class="l" style="top:296px;width:340px"></div><div class="l" style="top:318px;width:500px"></div>
+            <div class="say" id="say">psst… drag the lyrics around</div>
           </div>
           <div class="task">
-            <div class="wx"><i></i><div>23°C<br /><span style="opacity:.6">Sunny</span></div></div>
+            <div class="wx"><i></i><div>23°C<br /><span style="opacity:.6">sunny</span></div></div>
             <div class="ic start" style="left:380px"></div><div class="se">Search</div>
             <div class="ic" style="left:548px"></div><div class="ic" style="left:588px"></div><div class="ic" style="left:628px"></div><div class="ic" style="left:668px"></div>
-            <div class="clock">10:42<br /><span style="opacity:.7">today</span></div>
+            <div class="clock">10:42<br /><span style="opacity:.7">vibes</span></div>
           </div>
           <div class="zone" id="zTask" style="left:140px;top:454px;width:232px;height:42px"></div>
           <div class="zone" id="zTitle" style="left:390px;top:31px;width:228px;height:38px;border-radius:18px"></div>
           <div class="pill" id="pill"><span class="txt" id="ptxt">City lights are humming low<span class="u" id="pu"></span></span></div>
         </div>
       </div>
+      <div class="try" aria-hidden="true"><svg viewBox="0 0 60 40" fill="none" stroke="#17131f" stroke-width="2.5" stroke-linecap="round"><path d="M6 32 C 20 34, 40 26, 50 8 M50 8 l-9 3 M50 8 l1 9"/></svg> try me! it snaps 🧲</div>
     </div>
   </div>
 
-  <section id="watch" class="reveal">
-    <div class="label"><b>[00:12.40]</b> 25 seconds, no sound needed</div>
-    <h2 data-lyric="Watch it snap into place.">Watch it <span class="m">snap</span> into place.</h2>
-    <div class="screen"><video src="assets/lirico-explainer.mp4" poster="assets/poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Lirico explainer video"></video></div>
+  <div class="ticker" aria-hidden="true"><div>
+    <span>♪ YouTube</span><span>✦ Spotify</span><span>✦ literally any app</span><span>✦ Hinglish</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
+    <span>♪ YouTube</span><span>✦ Spotify</span><span>✦ literally any app</span><span>✦ Hinglish</span><span>✦ snaps like a magnet</span><span>✦ free forever</span><span>✦ no sign-up</span><span>✦ right on beat</span>
+  </div></div>
+
+  <section class="wrap reveal" id="how">
+    <h2 data-lyric="Three steps. Zero effort.">Three steps. <span class="p">Zero effort.</span></h2>
+    <p class="hand">(okay, two steps and a performance)</p>
+    <div class="steps">
+      <div class="step sticker"><div class="n">1</div><div class="e">🎧</div><h3>Hit play</h3><p>YouTube, Spotify, whatever's on.</p></div>
+      <div class="step sticker"><div class="n">2</div><div class="e">✨</div><h3>Words pop up</h3><p>In your taskbar. One line at a time.</p></div>
+      <div class="step sticker"><div class="n">3</div><div class="e">🎤</div><h3>Sing it loud</h3><p>Nobody's watching. (Probably.)</p></div>
+    </div>
   </section>
 
-  <section id="how" class="reveal">
-    <div class="label"><b>lirico.lrc</b> — what it does</div>
-    <h2 data-lyric="Small app. Big singalong energy.">Small app. <span class="c">Big singalong</span> energy.</h2>
-    <ol class="sheet">
-      <li data-lyric="It finds the song by itself."><span class="ts">[00:18.95]</span><h3>It finds the song by itself.</h3>
-        <p>YouTube in Chrome or Edge, Spotify, any player in Windows' media controls. Messy video titles ("Full Video Song", "(Official Video)") get cleaned up.</p></li>
-      <li data-lyric="Lives in your taskbar."><span class="ts">[00:24.10]</span><h3>Lives in your taskbar.</h3>
-        <p>It sits in the taskbar's empty space, even with auto-hide. Drag it near the taskbar or beside a window's minimise button and it <b>snaps on like a magnet</b>.</p></li>
-      <li data-lyric="Right on beat."><span class="ts">[00:31.72]</span><h3>Right on beat.</h3>
-        <p>One line at a time, with a mint underline that follows the singing. Pause, skip, scrub: it keeps up within a tenth of a second.</p></li>
-      <li data-lyric="Hindi in English letters."><span class="ts">[00:38.06]</span><h3>Hindi in English letters.</h3>
-        <p>Hindi songs show in English letters by default. Prefer Devanagari? One switch. Make it yours: fonts, colours, size, hotkeys like <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Space</kbd>.</p></li>
-    </ol>
+  <section class="wrap reveal" id="watch">
+    <h2 data-lyric="25 seconds of proof.">25 seconds <span class="m">of proof.</span></h2>
+    <p class="hand">no sound needed, it's literally about reading</p>
+    <div class="screen"><video src="assets/lirico-explainer.mp4" poster="assets/poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Lirico in 25 seconds"></video></div>
   </section>
 
-  <section id="sync" class="reveal">
-    <div class="split">
-      <div>
-        <div class="label"><b>[00:45.00]</b> the clever bit</div>
-        <h2 data-lyric="It waits for the singer.">Music videos start slow. <span class="l">Lirico waits for the singer.</span></h2>
-        <p class="sub">Lyrics are usually timed to the album track, so on a music video they'd run early. Lirico listens to what your PC plays,
-          hears the first sung words and locks on. It all happens on your PC: nothing is recorded, saved or sent.</p>
+  <section class="wrap reveal" id="stuff">
+    <h2 data-lyric="Little things we're proud of.">Little things we're <span class="l">proud of.</span></h2>
+    <div class="stickers">
+      <div class="st sticker"><div class="e">🧲</div><div><b>Snaps like a magnet</b><span>Drag it to the taskbar or next to any window's buttons. Click. Stuck.</span></div></div>
+      <div class="st sticker"><div class="e">🎯</div><div><b>Right on the beat</b><span>Skip, pause, rewind. It keeps up.</span></div></div>
+      <div class="st sticker"><div class="e">🌶️</div><div><b>Hinglish? Obviously.</b><span>Hindi songs in English letters. Devanagari if you like.</span></div></div>
+      <div class="st sticker"><div class="e">🎨</div><div><b>Your vibe, your colours</b><span>Fonts, sizes, colours, little animations.</span></div></div>
+      <div class="st sticker"><div class="e">🍿</div><div><b>Hides for movies</b><span>Goes fullscreen? Lirico steps aside.</span></div></div>
+      <div class="st sticker"><div class="e">😴</div><div><b>Zero babysitting</b><span>Starts with Windows. Waits for the next song.</span></div></div>
+    </div>
+  </section>
+
+  <div class="wrap" id="get">
+    <div class="final sticker reveal">
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <h2 data-lyric="Your shower concerts deserve subtitles.">Your shower concerts deserve <span class="p">subtitles.</span></h2>
+      <div class="cta" style="margin-top:28px">
+        <a class="btn" href="/download?src=footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+          Download for Windows</a>
+        <a class="coffee" id="coffee" target="_blank" rel="noopener">☕ buy me a coffee</a>
       </div>
-      <div class="wave" aria-hidden="true">
-        <div class="bars" id="bars"></div>
-        <div class="row"><span>intro · holding lyrics</span><span class="ok">✓ synced to the singer</span></div>
-        <div class="lyr">Hands up while the bassline rolls<span class="u"></span></div>
-      </div>
+      <div class="count" id="count">free · 1 file · no sign-up</div>
     </div>
-  </section>
 
-  <section id="download" class="final reveal">
-    <img class="mark" src="assets/logo.svg" alt="Lirico logo" />
-    <h2 data-lyric="Press play. Read along.">Press play. <span class="m">Read along.</span></h2>
-    <p class="sub" style="margin: 16px auto 0">One small download. It starts quietly with Windows and waits in your tray for the next song.</p>
-    <div class="cta">
-      <a class="btn" id="dl2" href="/download?src=footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
-        Download for Windows</a>
-      <a class="coffee" id="coffee" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+    <div class="faq reveal">
+      <details class="sticker"><summary>Windows says it's "protecting" me??</summary>
+        <p>We're new, not shady. Click <b>More info → Run anyway</b> and you're in.</p></details>
+      <details class="sticker"><summary>Are you spying on me?</summary>
+        <p>Nope. Just anonymous counts like "someone used it for 20 minutes". Never your songs. Turn it off in Settings anytime.</p></details>
     </div>
-    <div class="count" id="dlcount2"></div>
-    <div class="faq">
-      <details><summary>Windows says "Windows protected your PC"</summary>
-        <p>That's SmartScreen being careful with a new app that isn't code-signed yet. Click <b>More info → Run anyway</b>. Lirico then lives in your system tray.</p></details>
-      <details><summary>Does it collect anything?</summary>
-        <p>Only anonymous counts (minutes used, songs found or not, app version) to see whether Lirico is helping. Never song names, lyrics or audio.
-          Turn it off any time in Settings → Behavior. The website counts visits without cookies.</p></details>
-      <details><summary>A song shows no lyrics</summary>
-        <p>Lirico shows lyrics it can find with timing in the free <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a> database. Some songs aren't there yet; you'll see "No synced lyrics found" and it stays out of your way.</p></details>
-      <details><summary>Is it open source?</summary>
-        <p>Yes, the code is on <a href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener">GitHub</a>. Issues and ideas welcome.</p></details>
-    </div>
-  </section>
+  </div>
 
-  <footer>
-    <span>lirico. — lyrics, in time ♪</span>
-    <span>lyrics by LRCLIB · no account · no cookies</span>
-  </footer>
+  <footer>made with ♪ for people who sing at their desks</footer>
 </main>
 
-<div class="overlay" aria-hidden="true"><span class="line" id="ovLine"><span id="ovText">Sing along without switching tabs.</span><span class="bar2" id="ovBar"></span></span></div>
+<div class="overlay" aria-hidden="true"><span class="line" id="ovLine"><span id="ovText">Sing along. Skip the tab-hopping.</span><span class="bar2" id="ovBar"></span></span></div>
 
 <script>
-// ---- config: paste your Buy Me a Coffee / Ko-fi link here to show the coffee button
+// paste your Buy Me a Coffee / Ko-fi link here to show the coffee button
 const SUPPORT_URL = "";
 if (SUPPORT_URL) { const c = document.getElementById("coffee"); c.href = SUPPORT_URL; c.classList.add("on"); }
 
-// ---- privacy-friendly visit count (no cookies, no IP stored)
+// visit count: no cookies, nothing personal
 try { navigator.sendBeacon("/api/hit", JSON.stringify({ path: location.pathname, ref: document.referrer })); } catch (e) {}
-
-// ---- live download counter
 fetch("/api/public").then(r => r.json()).then(d => {
-  if (!d || !d.downloads) return;
-  const n = d.downloads.toLocaleString();
-  document.getElementById("dlcount").innerHTML = `<b>${n}</b> downloads`;
-  document.getElementById("dlcount2").innerHTML = `<b>${n}</b> people already reading along`;
+  if (d && d.downloads >= 25) document.getElementById("count").textContent = `${d.downloads.toLocaleString()} people singing along already ♪`;
 }).catch(() => {});
 
-// ---- header border on scroll, reveal-on-scroll
-const hdr = document.getElementById("hdr");
+// reveal on scroll
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .12 });
 document.querySelectorAll(".reveal").forEach(el => io.observe(el));
 
-// ---- music notes pop out of download buttons
+// notes fly out of the download buttons
 function burst(x, y) {
-  const glyphs = ["♪", "♫", "♬", "✦"], cols = ["#7ee0c3", "#ff8f7e", "#b9a6ff", "#ffd76a"];
-  for (let i = 0; i < 9; i++) {
-    const n = document.createElement("span");
-    n.className = "note"; n.textContent = glyphs[i % 4]; n.style.color = cols[i % 4];
-    n.style.left = x + "px"; n.style.top = y + "px";
-    n.style.setProperty("--dx", (Math.random() * 160 - 80) + "px"); n.style.setProperty("--r", (Math.random() * 80 - 40) + "deg");
+  const glyphs = ["♪", "♫", "♬", "✦", "★"], cols = ["#ff5fa2", "#2fd3a1", "#8f7dff", "#ffd23f", "#5ec8ff"];
+  for (let i = 0; i < 11; i++) {
+    const n = document.createElement("span"); n.className = "note";
+    n.textContent = glyphs[i % 5]; n.style.color = cols[i % 5]; n.style.left = x + "px"; n.style.top = y + "px";
+    n.style.setProperty("--dx", (Math.random() * 180 - 90) + "px"); n.style.setProperty("--r", (Math.random() * 90 - 45) + "deg");
     document.body.appendChild(n); setTimeout(() => n.remove(), 1500);
   }
 }
-document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", e => burst(e.clientX, e.clientY)));
+document.querySelectorAll(".btn, .get").forEach(b => b.addEventListener("click", e => burst(e.clientX, e.clientY)));
 
-// ---- waveform
+// floating notes in the background of the hero
 (function () {
-  const bars = document.getElementById("bars");
-  for (let i = 0; i < 56; i++) {
-    const s = document.createElement("span"), sing = i > 18;
-    s.style.height = (sing ? 30 + 70 * Math.abs(Math.sin(i * .9) * Math.cos(i * .37)) : 10 + 12 * Math.abs(Math.sin(i * 1.7))) + "%";
-    if (sing) { s.className = "s"; s.style.animationDelay = (-(i % 7) * .16) + "s"; }
-    bars.appendChild(s);
-  }
+  const hero = document.querySelector(".hero"); hero.style.position = "relative";
+  [["♪", "4%", "82%", 0], ["♫", "46%", "6%", -2], ["♬", "92%", "90%", -4], ["★", "40%", "92%", -1]].forEach(([g, x, y, d]) => {
+    const f = document.createElement("span"); f.className = "floaty"; f.textContent = g; f.style.left = x; f.style.top = y; f.style.animationDelay = d + "s";
+    hero.appendChild(f);
+  });
 })();
 
-// ---- the playground: drag the lyrics; they snap to the taskbar or the title bar like a magnet
+// playground: drag the lyrics; they snap to the taskbar or the title bar
 (function () {
   const play = document.getElementById("play"), stage = document.getElementById("stage"), pill = document.getElementById("pill");
   const txt = document.getElementById("ptxt"), und = document.getElementById("pu"), say = document.getElementById("say");
   const zT = document.getElementById("zTask"), zW = document.getElementById("zTitle");
-  const SLOTS = {
-    taskbar: { x: 144, y: 458, w: 224, h: 34, f: 15, r: 17, zone: zT },
-    titlebar: { x: 394, y: 34, w: 220, h: 32, f: 14, r: 16, zone: zW },
-  };
+  const SLOTS = { taskbar: { x: 144, y: 458, w: 224, h: 34, f: 15, r: 17 }, titlebar: { x: 394, y: 34, w: 220, h: 32, f: 14, r: 16 } };
   const FLOAT = { w: 300, h: 48, f: 17, r: 18 };
-  let s = 1, state = "taskbar", pos = { x: 0, y: 0 };
-
-  function fit() { s = play.clientWidth / 800; stage.style.transform = `scale(${s})`; }
-  function place(x, y, w, h, f, r) {
-    pos = { x, y };
-    Object.assign(pill.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", fontSize: f + "px", borderRadius: r + "px" });
-  }
+  let s = 1, state = "taskbar", pos = { x: 0, y: 0 }, drag = null;
+  const fit = () => { s = play.clientWidth / 800; stage.style.transform = `scale(${s})`; };
+  function place(x, y, w, h, f, r) { pos = { x, y }; Object.assign(pill.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", fontSize: f + "px", borderRadius: r + "px" }); }
   function dock(kind, ring) {
     const t = SLOTS[kind]; state = kind; place(t.x, t.y, t.w, t.h, t.f, t.r);
-    if (ring) {
-      const g = document.createElement("div"); g.className = "ring";
-      Object.assign(g.style, { left: t.x + "px", top: t.y + "px", width: t.w + "px", height: t.h + "px", borderRadius: t.r + "px" });
-      stage.appendChild(g); setTimeout(() => g.remove(), 700);
-      say.textContent = kind === "taskbar" ? "snapped into the taskbar ✓" : "snapped beside the minimise button ✓";
-    }
+    if (!ring) return;
+    const g = document.createElement("div"); g.className = "ring";
+    Object.assign(g.style, { left: t.x + "px", top: t.y + "px", width: t.w + "px", height: t.h + "px", borderRadius: t.r + "px" });
+    stage.appendChild(g); setTimeout(() => g.remove(), 700);
+    say.textContent = kind === "taskbar" ? "click! stuck to the taskbar ✓" : "click! next to the window buttons ✓"; say.style.color = "#ff5fa2";
   }
   function near(cx, cy) {
     if (cy > 410) return "taskbar";
     const t = SLOTS.titlebar;
-    if (Math.abs(cx - (t.x + t.w / 2)) < 190 && Math.abs(cy - (t.y + t.h / 2)) < 60) return "titlebar";
-    return null;
+    return Math.abs(cx - (t.x + t.w / 2)) < 190 && Math.abs(cy - (t.y + t.h / 2)) < 60 ? "titlebar" : null;
   }
-  let drag = null;
   pill.addEventListener("pointerdown", e => {
     pill.setPointerCapture(e.pointerId); pill.classList.add("drag");
     const r = stage.getBoundingClientRect();
@@ -411,31 +369,24 @@ document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", e => 
     const r = stage.getBoundingClientRect();
     let x = (e.clientX - r.left) / s - drag.dx, y = (e.clientY - r.top) / s - drag.dy;
     x = Math.max(4, Math.min(800 - FLOAT.w - 4, x)); y = Math.max(4, Math.min(500 - FLOAT.h - 4, y));
-    const t = near(x + FLOAT.w / 2, y + FLOAT.h / 2);
-    drag.target = t;
+    const t = near(x + FLOAT.w / 2, y + FLOAT.h / 2); drag.target = t;
     zT.classList.toggle("on", t === "taskbar"); zW.classList.toggle("on", t === "titlebar");
-    if (t) {   // the magnet pulls
-      const z = SLOTS[t];
-      x = z.x + z.w / 2 - FLOAT.w / 2; y = z.y + z.h / 2 - FLOAT.h / 2;
-    }
+    if (t) { const z = SLOTS[t]; x = z.x + z.w / 2 - FLOAT.w / 2; y = z.y + z.h / 2 - FLOAT.h / 2; }
     place(x, y, FLOAT.w, FLOAT.h, FLOAT.f, FLOAT.r);
   });
   function drop() {
     if (!drag) return;
     pill.classList.remove("drag"); zT.classList.remove("on"); zW.classList.remove("on");
-    if (drag.target) dock(drag.target, true); else say.textContent = "floating ✦ try the taskbar or the window buttons";
+    if (drag.target) dock(drag.target, true); else { say.textContent = "floating free ✦ now try the taskbar"; say.style.color = "#8f7dff"; }
     drag = null;
   }
   pill.addEventListener("pointerup", drop); pill.addEventListener("pointercancel", drop);
-
-  // lyrics loop with the moving underline (original lines, not a real song)
   const lines = ["City lights are humming low", "Every window turns to gold", "Hands up while the bassline rolls", "Sing it back, we never fold"];
   let i = 0;
   function next() {
     txt.classList.add("out");
     setTimeout(() => {
-      txt.firstChild.nodeValue = lines[i = (i + 1) % lines.length];
-      txt.classList.remove("out");
+      txt.firstChild.nodeValue = lines[i = (i + 1) % lines.length]; txt.classList.remove("out");
       und.style.transition = "none"; und.style.width = "0";
       requestAnimationFrame(() => requestAnimationFrame(() => { und.style.transition = "width 2.2s linear"; und.style.width = "100%"; }));
     }, 200);
@@ -445,24 +396,18 @@ document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", e => 
   setInterval(next, 2700);
 })();
 
-// ---- the page sings itself: the overlay shows the section you're reading
+// the page sings along with you
 (function () {
   const items = [...document.querySelectorAll("[data-lyric]")];
   const text = document.getElementById("ovText"), bar = document.getElementById("ovBar"), line = document.getElementById("ovLine");
-  const sheet = [...document.querySelectorAll(".sheet li")];
   let current = null;
   function tick() {
-    hdr.classList.toggle("scrolled", scrollY > 10);
     const mid = innerHeight * .55;
     let best = items[0];
     for (const el of items) if (el.getBoundingClientRect().top < mid) best = el;
-    if (best !== current) {
-      current = best; line.classList.add("out");
-      setTimeout(() => { text.textContent = best.dataset.lyric; line.classList.remove("out"); }, 180);
-    }
-    const box = (best.closest("section, .hero, li") || best).getBoundingClientRect();
+    if (best !== current) { current = best; line.classList.add("out"); setTimeout(() => { text.textContent = best.dataset.lyric; line.classList.remove("out"); }, 180); }
+    const box = (best.closest("section, .hero, .final") || best).getBoundingClientRect();
     bar.style.width = (Math.min(1, Math.max(0, (mid - box.top) / Math.max(1, box.height))) * 100).toFixed(1) + "%";
-    for (const li of sheet) { const r = li.getBoundingClientRect(); li.classList.toggle("on", r.top < mid && r.bottom > mid * .5); }
   }
   addEventListener("scroll", tick, { passive: true }); addEventListener("resize", tick); tick();
 })();
