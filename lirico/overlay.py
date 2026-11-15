@@ -154,6 +154,7 @@ def _x(line, pos: int) -> float:
 class Overlay(QWidget):
     moved = Signal(QPoint)            # user finished dragging: new top-left
     context_menu = Signal(QPoint)     # right-click at global pos
+    media_action = Signal(str)        # "previous" | "play_pause" | "next" (the optional buttons)
 
     def __init__(self, theme: Theme, click_through: bool = False):
         super().__init__(None)
@@ -182,6 +183,9 @@ class Overlay(QWidget):
         self._dock: QRect | None = None      # docked inside the taskbar (logical rect)
         self._snapping = False                # being pulled onto a magnet target
         self._light_surface = False           # docked on a light taskbar
+        self._controls = False                # show previous / play-pause / next on hover
+        self._buttons: dict = {}              # name -> QRectF, where they were last drawn
+        self._btn_hover: str | None = None
 
         self._trans = 1.0
         self._trans_anim = QVariantAnimation(self, startValue=0.0, endValue=1.0)
@@ -232,6 +236,73 @@ class Overlay(QWidget):
             self._light_surface = light
             self._apply_surface_colors()
             self.update()
+
+    def set_media_controls(self, enabled: bool) -> None:
+        self._controls = bool(enabled)
+        self._buttons = {}
+        self.update()
+
+    def _button_at(self, pos) -> str | None:
+        if not (self._controls and self._hover):
+            return None
+        p = QPointF(pos)
+        return next((n for n, r in self._buttons.items() if r.adjusted(-3, -3, 3, 3).contains(p)), None)
+
+    def _paint_controls(self, p: QPainter, area: QRectF) -> None:
+        """Previous / play-pause / next, shown while the mouse is over the lyrics."""
+        self._buttons = {}
+        if not (self._controls and self._hover and not self._click_through) or self._drag_offset is not None:
+            return
+        size = max(18.0, min(30.0, area.height() - 10))
+        gap = size * 0.18
+        w = size * 3 + gap * 2 + size * 0.5
+        cap = QRectF(area.right() - w - 6, area.center().y() - (size + 8) / 2, w, size + 8)
+        bg = QColor(self.theme.panel_color)
+        bg.setAlphaF(0.92)
+        path = QPainterPath()
+        path.addRoundedRect(cap, cap.height() / 2, cap.height() / 2)
+        p.save()
+        p.setOpacity(1.0)
+        p.fillPath(path, bg)
+        fg = QColor(self.c_text if not self._dark_text() else QColor("#F0FFFFFF"))
+        x = cap.left() + size * 0.25
+        for name in ("previous", "play_pause", "next"):
+            r = QRectF(x, cap.top() + 4, size, size)
+            self._buttons[name] = r
+            if name == self._btn_hover:
+                hl = QColor(self.c_accent)
+                hl.setAlphaF(0.30)
+                p.setBrush(hl)
+                p.setPen(Qt.NoPen)
+                p.drawEllipse(r)
+            self._draw_icon(p, name, r, fg)
+            x += size + gap
+        p.restore()
+
+    def _draw_icon(self, p: QPainter, name: str, r: QRectF, color: QColor) -> None:
+        c, s = r.center(), r.width() * 0.22
+        p.setPen(Qt.NoPen)
+        p.setBrush(color)
+        tri = QPainterPath()
+        if name == "play_pause":
+            if self._paused:      # show "play"
+                tri.moveTo(c.x() - s * 0.8, c.y() - s * 1.1)
+                tri.lineTo(c.x() + s * 1.2, c.y())
+                tri.lineTo(c.x() - s * 0.8, c.y() + s * 1.1)
+                tri.closeSubpath()
+                p.drawPath(tri)
+            else:                 # show "pause"
+                bw = s * 0.62
+                p.drawRoundedRect(QRectF(c.x() - s * 0.9, c.y() - s * 1.05, bw, s * 2.1), 1.2, 1.2)
+                p.drawRoundedRect(QRectF(c.x() + s * 0.9 - bw, c.y() - s * 1.05, bw, s * 2.1), 1.2, 1.2)
+            return
+        d = 1 if name == "next" else -1
+        tri.moveTo(c.x() - d * s * 0.9, c.y() - s)
+        tri.lineTo(c.x() + d * s * 0.7, c.y())
+        tri.lineTo(c.x() - d * s * 0.9, c.y() + s)
+        tri.closeSubpath()
+        p.drawPath(tri)
+        p.drawRoundedRect(QRectF(c.x() + d * s * 0.7 - (s * 0.32 if d > 0 else 0), c.y() - s, s * 0.32, s * 2), 1, 1)
 
     def _dark_text(self) -> bool:
         t = self.theme
@@ -444,6 +515,10 @@ class Overlay(QWidget):
 
     # ------------------------------------------------------------------ mouse (drag anywhere)
     def mousePressEvent(self, e):
+        btn = self._button_at(e.position()) if e.button() == Qt.LeftButton else None
+        if btn is not None:
+            self.media_action.emit(btn)
+            return
         if e.button() == Qt.LeftButton:
             self._press_pos = e.globalPosition().toPoint()
             self._drag_offset = self._press_pos - self.pos()
@@ -459,6 +534,11 @@ class Overlay(QWidget):
 
     def mouseMoveEvent(self, e):
         if self._drag_offset is None:
+            hov = self._button_at(e.position())
+            if hov != self._btn_hover:
+                self._btn_hover = hov
+                self.setCursor(Qt.PointingHandCursor if hov else Qt.OpenHandCursor)
+                self.update()
             return
         want = e.globalPosition().toPoint() - self._drag_offset
         target = None
@@ -496,6 +576,7 @@ class Overlay(QWidget):
 
     def leaveEvent(self, e):
         self._hover = False
+        self._btn_hover = None
         self.update()
 
     # ------------------------------------------------------------------ painting
@@ -658,6 +739,7 @@ class Overlay(QWidget):
         else:
             draw(row, 1.0, 0.0, sung, True)
         p.restore()
+        self._paint_controls(p, pill)
 
     def paintEvent(self, _event) -> None:
         t = self.theme
@@ -756,4 +838,6 @@ class Overlay(QWidget):
             draw_row(row, trans, slide * (1.0 - trans), sung, current=True)
         else:
             draw_row(row, 1.0, 0.0, sung, current=True)
+        if pw > 1 and ph > 1:
+            self._paint_controls(p, panel)
         p.end()

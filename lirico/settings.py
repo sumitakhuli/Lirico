@@ -38,11 +38,12 @@ class Settings:
     titlebar_app: str = ""              # exe of the window the lyrics are attached to (title-bar mode)
     theme_preset: str = "classic"       # theme.PRESETS key; `theme` holds the user's tweaks on top
     autostart_setup: bool = False       # first-run "start with Windows" has been applied
+    media_controls: bool = False        # previous / play-pause / next on the lyrics (on hover)
     auto_update: bool = True            # download new versions and restart into them when idle
     telemetry: bool = True              # anonymous usage counts (Settings -> Behavior to turn off)
     telemetry_notice: bool = False      # the one-time "we share anonymous counts" note was shown
     install_id: str = ""                # random id for the counts; linked to nobody
-    script_pref: str = "latin"          # "latin" (English letters, default) | "devanagari"
+    script_pref: str = "latin"          # "latin" (English letters, default) | "original" (song's own script)
     lead: float = 0.15                  # show every line this many seconds early (reading time)
     offsets: dict = field(default_factory=dict)   # per-song extra offset, seconds
     pins: dict = field(default_factory=dict)      # per-song chosen LRCLIB id
@@ -68,6 +69,8 @@ class Settings:
         known = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
         if data.get("script_pref") == "auto":
             known["script_pref"] = "latin"
+        if data.get("script_pref") == "devanagari":
+            known["script_pref"] = "original"
         if int(data.get("version", 1)) < 2:
             # v1 settings window could save hotkeys as "" by accident: restore defaults.
             known["hotkeys"] = {k: v for k, v in (data.get("hotkeys") or {}).items() if v}

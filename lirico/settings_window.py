@@ -13,7 +13,7 @@ from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QKeySequence
 from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFontComboBox, QFrame,
                                QHBoxLayout, QKeySequenceEdit, QLabel, QListWidget, QListWidgetItem,
-                               QPushButton, QScrollArea, QSlider, QStackedWidget, QVBoxLayout, QWidget)
+                               QMessageBox, QPushButton, QScrollArea, QSlider, QStackedWidget, QVBoxLayout, QWidget)
 
 from .settings import HOTKEY_ACTIONS
 from .theme import PRESETS, THEME, Theme, base_theme
@@ -45,6 +45,8 @@ QSlider::handle:horizontal { background: #ffffff; width: 14px; height: 14px; mar
 QComboBox, QFontComboBox, QDoubleSpinBox, QKeySequenceEdit, QLineEdit {
     background: #1c1f27; border: 1px solid #2a2f3a; border-radius: 7px; padding: 4px 8px; min-height: 22px; }
 QComboBox:hover, QFontComboBox:hover, QDoubleSpinBox:hover { border-color: #3a4150; }
+QPushButton#danger { color: #ff8a8a; border-color: #5a2a30; }
+QPushButton#danger:hover { background: #3a1d22; }
 QComboBox QAbstractItemView { background: #1c1f27; border: 1px solid #2a2f3a; selection-background-color: #2a3140; }
 QPushButton { background: #22262f; border: 1px solid #2a2f3a; border-radius: 7px; padding: 6px 14px; }
 QPushButton:hover { background: #2a2f3a; }
@@ -340,10 +342,16 @@ class SettingsWindow(QWidget):
         self._row(lay, "Share anonymous usage stats", self._toggle(lambda: st.telemetry, self.ctl.set_telemetry),
                   "Counts only (minutes used, songs found or not, app version). "
                   "Never song names, lyrics or audio")
+        self._row(lay, "Media buttons on the lyrics", self._toggle(lambda: st.media_controls, self.ctl.set_media_controls),
+                  "Previous, play / pause and next appear when you hover over the lyrics")
         self._row(lay, "Update automatically", self._toggle(lambda: st.auto_update, self.ctl.set_auto_update),
                   "New versions install in the background; Lirico restarts into them when no song is playing")
         self._row(lay, "Start with Windows", self._toggle(self.ctl.autostart_enabled, self.ctl.set_autostart),
                   "Lirico starts quietly in the tray when you sign in")
+        uninstall = QPushButton("Uninstall Lirico…", objectName="danger")
+        uninstall.clicked.connect(self._uninstall)
+        self._row(lay, "Uninstall", uninstall,
+                  "Removes Lirico, its settings and lyrics cache, and the start-with-Windows entry")
 
     def _build_sync(self, lay: QVBoxLayout) -> None:
         st = self.ctl.settings
@@ -378,9 +386,10 @@ class SettingsWindow(QWidget):
                   f"Fastest fix: press {st.hotkey('tap_sync') or 'the sync hotkey'} the moment the singer starts the "
                   "upcoming line (the small one). Remembered for this song")
         self._refreshers.append(self._refresh_song)
-        self._row(lay, "Hindi lyrics in", self._combo(
-            [("English letters (Hinglish)", "latin"), ("Devanagari (हिन्दी)", "devanagari")],
-            lambda: st.script_pref, self.ctl.set_script_pref))
+        self._row(lay, "Lyrics in other scripts", self._combo(
+            [("English letters", "latin"), ("Original script (हिन्दी, اردو, 한국어…)", "original")],
+            lambda: st.script_pref, self.ctl.set_script_pref),
+            "Hindi, Urdu, Punjabi, Korean, Russian… shown in English letters, or as written")
         self._refresh_song()
 
     def _refresh_song(self) -> None:
@@ -467,6 +476,17 @@ class SettingsWindow(QWidget):
         self.pages.insertWidget(4, scroll)
         self.pages.setCurrentIndex(idx)
         self.show_hotkey_errors(errors)
+
+    def _uninstall(self) -> None:
+        box = QMessageBox(QMessageBox.Warning, "Uninstall Lirico",
+                          "Remove Lirico from this PC?\n\nThis deletes Lirico.exe, your settings, the lyrics "
+                          "cache and the start-with-Windows entry. It can't be undone.", parent=self)
+        yes = box.addButton("Uninstall", QMessageBox.DestructiveRole)
+        box.addButton("Cancel", QMessageBox.RejectRole)
+        box.exec()
+        if box.clickedButton() is yes:
+            self.hide()
+            self.ctl.uninstall()
 
     def _reset_theme(self) -> None:
         self.theme = base_theme(self.ctl.settings.theme_preset)

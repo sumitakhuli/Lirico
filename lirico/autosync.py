@@ -24,7 +24,7 @@ from typing import Optional
 import numpy as np
 
 from .lrc import LyricLine
-from .translit import to_hinglish
+from .translit import to_latin as to_hinglish   # any script -> English letters
 
 log = logging.getLogger(__name__)
 

@@ -64,6 +64,17 @@ def _seconds(td) -> float:
         return 0.0
 
 
+def send_media_key(name: str) -> None:
+    """Press a keyboard media key (goes to whatever Windows treats as the active player)."""
+    import ctypes
+    vk = {"play_pause": 0xB3, "next": 0xB0, "previous": 0xB1}.get(name)
+    if vk is None:
+        return
+    u = ctypes.windll.user32
+    u.keybd_event(vk, 0, 0x1, 0)          # KEYEVENTF_EXTENDEDKEY
+    u.keybd_event(vk, 0, 0x1 | 0x2, 0)    # ... | KEYEVENTF_KEYUP
+
+
 class MediaWatcher:
     """Background poller. Calls `on_snapshot` from the worker thread with a
     MediaSnapshot, or None when nothing is playing / no session exists."""
@@ -74,6 +85,9 @@ class MediaWatcher:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._last_key: Optional[tuple] = None  # (app id, title) of the session we follow
+        self._session = None                    # that session (for play / pause / next / previous)
+        import queue
+        self._cmds: "queue.SimpleQueue[str]" = queue.SimpleQueue()
 
     @staticmethod
     def available() -> bool:
@@ -89,6 +103,24 @@ class MediaWatcher:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=2)
+
+    def command(self, name: str) -> None:
+        """'play_pause' | 'next' | 'previous' for the song whose lyrics are shown."""
+        self._cmds.put(name)
+
+    async def _run_commands(self) -> None:
+        while not self._cmds.empty():
+            name = self._cmds.get_nowait()
+            s, ok = self._session, False
+            try:
+                if s is not None:
+                    fn = {"play_pause": s.try_toggle_play_pause_async, "next": s.try_skip_next_async,
+                          "previous": s.try_skip_previous_async}[name]
+                    ok = bool(await fn())
+            except Exception as exc:
+                log.debug("media command %s failed: %s", name, exc)
+            if not ok:
+                send_media_key(name)          # the app ignored it: try the keyboard's media keys
 
     # -- worker -------------------------------------------------------------
     def _run(self) -> None:
@@ -112,7 +144,11 @@ class MediaWatcher:
                 self._on_snapshot(snap)
             except Exception:
                 log.exception("snapshot callback failed")
-            await asyncio.sleep(self._interval)
+            # short naps so a click on play / next feels instant
+            for _ in range(5):
+                if not self._cmds.empty():
+                    await self._run_commands()
+                await asyncio.sleep(self._interval / 5)
 
     async def _read(self, manager) -> Optional[MediaSnapshot]:
         sessions = list(manager.get_sessions() or [])
@@ -154,7 +190,7 @@ class MediaWatcher:
         if props is None or not key[1]:
             return None
         self._last_key = key
-        chosen = session
+        self._session = chosen = session
         info = chosen.get_playback_info()
         timeline = chosen.get_timeline_properties()
 

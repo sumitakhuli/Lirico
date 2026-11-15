@@ -366,3 +366,28 @@ def test_update_versions():
     assert parse_version("v1.2.0") == (1, 2, 0) and parse_version("1.10") == (1, 10, 0)
     assert is_newer("v1.3.0", "1.2.0") and is_newer("1.10.0", "1.9.9")
     assert not is_newer("v1.2.0", "1.2.0") and not is_newer("1.1.9", "1.2.0")
+
+
+# ---------------------------------------------------------------- other scripts -> English letters
+def test_to_latin_many_scripts():
+    from lirico.translit import latin_ratio, to_latin
+    assert to_latin("ایسا دیکھا نہیں خوبصورت کوئی") == "Aisa dekha nahin khoobsurat koi"   # Urdu
+    assert to_latin("جسم جیسے اجنتا") == "Jism jaise ajanta"
+    assert to_latin("함께 노래해요") == "Hamkke noraehaeyo"                                   # Korean
+    assert to_latin("Я тебя люблю") == "Ya tebya lyublyu"                                     # Russian
+    assert to_latin("ਸੋਹਣਾ ਮੁੱਖੜਾ ਤੇਰਾ") == "Sohna mukhra tera"                                 # Punjabi
+    assert to_latin("तेरे बिना") == "Tere bina"                                                 # Hindi
+    assert to_latin("一緒に歌おう") == "一緒に歌おう"        # kanji: can't be read without a dictionary
+    assert to_latin("Canción de amor") == "Canción de amor"
+    assert latin_ratio("Canción") == 1.0 and latin_ratio("نہیں") == 0.0
+
+
+def test_prefers_english_letters_for_any_script():
+    from lirico.lyrics_source import rank
+    from lirico.title_clean import clean_track
+    tr = clean_track("Afreen Afreen", "Rahat Fateh Ali Khan", "", "Spotify")
+    urdu = {"id": 1, "trackName": "Afreen Afreen", "artistName": "Rahat Fateh Ali Khan", "duration": 400.0,
+            "syncedLyrics": "[00:50.14] ایسا دیکھا نہیں خوبصورت کوئی"}
+    latin = dict(urdu, id=2, syncedLyrics="[00:50.26] Aisa dekha nahi khoobsurat koi")
+    assert rank(tr, [urdu, latin], 400.0, "latin")[0][2]["id"] == 2
+    assert rank(tr, [urdu, latin], 400.0, "original")[0][2]["id"] == 1

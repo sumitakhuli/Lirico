@@ -135,7 +135,7 @@ class Tray:
                 diff = d - media
                 fit = "  · fits this video" if abs(diff) <= 1.6 else f"  · {diff:+.0f} s"
             kind = "" if alt.get("synced") else "  · unsynced"
-            script = "  · हिन्दी" if alt.get("devanagari") else ""
+            script = "  · original script" if alt.get("other_script", alt.get("devanagari")) else ""
             label = f"{(alt.get('track') or '?')[:34]} — {(alt.get('artist') or '?')[:22]}  ({_mmss(d)}){fit}{kind}{script}"
             self._add(versions, label, lambda _=False, i=alt.get("id"): ctl.choose_version(i),
                       checked=alt.get("id") == ctl.current_lyrics_id())

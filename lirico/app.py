@@ -125,6 +125,8 @@ class Controller(QObject):
 
         self.tray = Tray(self, self.theme)
         self.overlay.context_menu.connect(self.tray.popup)
+        self.overlay.set_media_controls(settings.media_controls)
+        self.overlay.media_action.connect(self.media_command)
 
         from .hotkeys import HotkeyManager
         self.hotkeys = HotkeyManager()
@@ -337,6 +339,15 @@ class Controller(QObject):
         else:
             self.autosync.recorder.stop()
             self.sync_state, self.hold = SYNC_OFF, False
+
+    def media_command(self, name: str) -> None:
+        """Previous / play-pause / next for the song whose lyrics are showing."""
+        self.watcher.command(name)
+
+    def set_media_controls(self, enabled: bool) -> None:
+        self.settings.media_controls = bool(enabled)
+        self.settings.save()
+        self.overlay.set_media_controls(bool(enabled))
 
     def check_for_update(self) -> None:
         if self.settings.auto_update:
@@ -779,6 +790,39 @@ class Controller(QObject):
         cmd = self._launch_command()
         if cmd:
             winutil.set_autostart(bool(enabled), cmd)
+
+    def uninstall(self) -> None:
+        """Remove Lirico from this PC: start-with-Windows entry, settings, lyrics
+        cache, log and (for the packaged app) Lirico.exe itself. Files that are in
+        use while we run are deleted by a tiny helper right after we exit."""
+        import subprocess
+        from .paths import home
+        log.info("uninstalling")
+        try:
+            winutil.set_autostart(False, "")
+        except OSError:
+            pass
+        self.settings.telemetry = False          # nothing more is sent
+        data = home()
+        default = data.resolve() == (Path.home() / ".lirico").resolve()
+        cmds = ["ping -n 5 127.0.0.1 >nul"]      # give this process time to exit
+        if default:
+            cmds.append(f'rmdir /s /q "{data}"')
+        else:                                    # custom LIRICO_HOME: only our own files
+            for name in ("settings.json", "settings.tmp", "lirico.log", "lirico.log.1", "lirico.lock"):
+                cmds.append(f'del /f /q "{data / name}"')
+            cmds.append(f'rmdir /s /q "{data / "cache"}"')
+        if getattr(sys, "frozen", False):
+            exe = Path(sys.executable)
+            cmds.append(f'del /f /q "{exe}"')
+            cmds.append(f'del /f /q "{exe.with_name(exe.stem + ".old.exe")}"')
+        try:
+            # one string: cmd.exe has its own quoting rules (list quoting would break the paths)
+            subprocess.Popen(f'cmd.exe /c "{" & ".join(cmds)}"', close_fds=True,
+                             creationflags=0x08000000)          # CREATE_NO_WINDOW
+        except OSError as exc:
+            log.warning("uninstall helper failed: %s", exc)
+        self.quit()
 
     def open_data_folder(self) -> None:
         try:

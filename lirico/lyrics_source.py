@@ -28,7 +28,7 @@ from . import __version__
 from .lrc import LyricLine, parse_lrc
 from .textnorm import contains_phrase, normalize, similarity, tokens
 from .title_clean import CleanTrack, strip_all_brackets, strip_decoration
-from .translit import to_hinglish
+from .translit import latin_ratio, to_latin
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +73,19 @@ def devanagari_ratio(text: str) -> float:
 
 def _is_deva(item: dict) -> bool:
     return devanagari_ratio(item.get("syncedLyrics") or item.get("plainLyrics") or "") > 0.5
+
+
+def is_non_latin(text: str) -> bool:
+    """Lyrics mostly in another script (Devanagari, Urdu, Korean, Cyrillic...)."""
+    return latin_ratio(text or "") < 0.5
+
+
+def _non_latin_item(item: dict) -> bool:
+    return is_non_latin(item.get("syncedLyrics") or item.get("plainLyrics") or "")
+
+
+def wants_original(script_pref: str) -> bool:
+    return script_pref in ("original", "devanagari")
 
 
 def _split_artists(artist: str) -> list[str]:
@@ -169,10 +182,8 @@ def rank(track: CleanTrack, items: Iterable[dict], duration: float, script_pref:
             final -= 0.3   # exact metadata but very different length: another version
         lyr = item.get("syncedLyrics") or item.get("plainLyrics") or ""
         if lyr:
-            deva = devanagari_ratio(lyr) > 0.5
-            if script_pref == "devanagari" and deva:
-                final += 0.04
-            elif script_pref != "devanagari" and not deva:
+            other_script = is_non_latin(lyr)
+            if wants_original(script_pref) == other_script:
                 final += 0.04  # small: timing matters more, text can be transferred
         tier = 2 if has_synced else (1 if lyr.strip() else 0)
         ranked.append((tier, final, delta, item))
@@ -215,12 +226,12 @@ def _result_from_item(item: dict, duration: float = 0.0, script_pref: str = "lat
         lines = parse_lrc(synced)
         if lines:
             romanized = False
-            if script_pref != "devanagari" and devanagari_ratio(synced) > 0.5:
+            if not wants_original(script_pref) and is_non_latin(synced):
                 # Prefer a human romanization with the same line structure...
                 for other in pool:
-                    if other.get("id") == item.get("id") or _is_deva(other):
+                    if other.get("id") == item.get("id") or _non_latin_item(other):
                         continue
-                    if devanagari_ratio(other.get("trackName", "")) > 0.5:
+                    if is_non_latin(other.get("trackName", "")):
                         continue
                     moved = transfer_text(lines, other.get("syncedLyrics") or other.get("plainLyrics") or "")
                     if moved:
@@ -228,8 +239,8 @@ def _result_from_item(item: dict, duration: float = 0.0, script_pref: str = "lat
                         break
                 # ...else transliterate.
                 if not romanized:
-                    lines = [LyricLine(l.start, to_hinglish(l.text), None) for l in lines]
-                    romanized = True
+                    lines = [LyricLine(l.start, to_latin(l.text), None) for l in lines]
+                    romanized = any(l.text != o.text for l, o in zip(lines, parse_lrc(synced)))
             return LyricsResult(SYNCED, lines=lines, plain=plain, romanized=romanized, **common)
     if plain.strip():
         return LyricsResult(PLAIN, plain=plain, message="Only unsynced lyrics available", **common)
@@ -331,6 +342,17 @@ class LrclibClient:
                     chosen = None
         if chosen is None and ranked:
             chosen = ranked[0][2]
+            if not wants_original(script_pref) and _non_latin_item(chosen):
+                # Urdu / Hindi / Punjabi... text: one more search for a version in
+                # English letters timed to the same recording (Afreen Afreen has one).
+                more = self._latin_versions(chosen, pool)
+                if more:
+                    pool = pool + more
+                    ranked = rank(track, pool, duration, script_pref)
+                    chosen = ranked[0][2]
+                    if cached is not None:
+                        cached["pool"] = [_slim(i) for i in pool[:60]]
+                        self.cache.put(key, cached)
         if cached is None:
             self.cache.put(key, {"status": NOT_FOUND if chosen is None else "found",
                                  "query": track.title, "pool": [_slim(i) for i in pool[:40]]})
@@ -340,9 +362,28 @@ class LrclibClient:
         result.alternatives = [
             {"id": it.get("id"), "track": it.get("trackName"), "artist": it.get("artistName"),
              "duration": it.get("duration"), "synced": bool(it.get("syncedLyrics")),
-             "devanagari": _is_deva(it)}
+             "devanagari": _is_deva(it), "other_script": _non_latin_item(it)}
             for _, _, it in ranked[:12]]
         return result
+
+    def _latin_versions(self, item: dict, pool: list) -> list:
+        """Other LRCLIB entries of `item`'s song written in English letters."""
+        d = float(item.get("duration") or 0)
+        for it in pool:
+            if (not _non_latin_item(it) and it.get("syncedLyrics")
+                    and (not d or abs(float(it.get("duration") or 0) - d) <= EXACT_DURATION)):
+                return []           # already have one
+        name = strip_all_brackets(item.get("trackName") or "")
+        artist = (_split_artists(item.get("artistName") or "") or [""])[0]
+        if not name:
+            return []
+        try:
+            found = self._get("search", {"q": f"{name} {artist}".strip()}) or []
+        except requests.RequestException:
+            return []
+        ids = {it.get("id") for it in pool}
+        return [it for it in found if isinstance(it, dict) and it.get("id") not in ids
+                and it.get("syncedLyrics") and not _non_latin_item(it)]
 
     # -- search -------------------------------------------------------------
     def _search(self, track: CleanTrack, duration: float, script_pref: str) -> list[dict]:

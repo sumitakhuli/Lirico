@@ -22,7 +22,11 @@ Free, one file, Windows 10 / 11. No account, no setup.
   little flower or teddy riding it). Everything stays customisable on top.
 - **Sync first**: picks the lyrics version timed to the exact recording, and **listens for the singer**
   so music-video intros don't make lyrics start early.
-- Any language LRCLIB has. Hindi songs show in **English letters (Hinglish)** by default; Devanagari is one switch away.
+- **Any language.** Songs written in another script (Hindi, Urdu, Punjabi, Bengali, Tamil, Korean,
+  Russian, Greek…) show in **English letters** by default: Lirico picks a version already written that way
+  when LRCLIB has one, and romanizes it otherwise. "Original script" is one switch away.
+- Optional **previous / play-pause / next** buttons on the lyrics (Settings → Behavior, off by default).
+- **Uninstall** from Settings → Behavior removes the app, its settings and cache.
 - Long lines wrap onto two balanced rows instead of being cut off.
 - Settings for font, size, colours, background, animations, hotkeys, with quick switches in the sidebar.
 - Starts with Windows and waits in the tray, and **updates itself**: new versions install in the background and Lirico restarts into them when nothing is playing (both can be turned off in Settings).
