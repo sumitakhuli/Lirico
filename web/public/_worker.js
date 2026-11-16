@@ -34,6 +34,11 @@ export default {
     const url = new URL(request.url);
     const country = request.cf?.country || null;
 
+    // --- Google Search Console ownership file (served as-is; Pages would redirect .html)
+    if (url.pathname === "/google74dab7bd6afadbbc.html") {
+      return new Response("google-site-verification: google74dab7bd6afadbbc.html", { headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+
     // --- downloads: count, then hand over to GitHub Releases
     if (url.pathname === "/download") {
       ctx.waitUntil(
