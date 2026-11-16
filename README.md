@@ -1,7 +1,8 @@
-# Lirico
+# Lirico: free synced lyrics for Windows
 
-Time-synced lyrics for whatever is playing on your Windows PC, line by line,
-**right in your taskbar** (or beside any window's minimise button, or floating anywhere).
+Time-synced lyrics for whatever is playing on your Windows PC (**Spotify, YouTube, YouTube Music,
+Apple Music** or any player), line by line, **right in your taskbar** (or beside any window's
+minimise button, or floating anywhere). The easy way to see lyrics while playing Spotify on Windows.
 
 <p align="center"><a href="https://getlirico.pages.dev"><img src="docs/demo.gif" alt="Lirico demo: lyrics in the taskbar, magnetic snapping, auto-sync" width="820"></a></p>
 

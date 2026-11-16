@@ -3,10 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lirico — lyrics in your taskbar ♪</title>
-<meta name="description" content="Play anything. Lirico pops the lyrics into your taskbar, line by line, right on the beat. Free for Windows." />
-<meta property="og:title" content="Lirico — lyrics in your taskbar ♪" />
-<meta property="og:description" content="Sing along. Skip the tab-hopping. Free for Windows." />
+<title>Lirico – Free Synced Lyrics for Windows (Spotify &amp; YouTube)</title>
+<meta name="description" content="Free Windows app that shows synced lyrics while you play Spotify, YouTube or any player: live, line by line, right in your taskbar. Any language, no sign-up." />
+<meta name="keywords" content="synced lyrics for Windows, lyrics while playing Spotify on Windows, Spotify lyrics Windows, live lyrics Windows, YouTube lyrics, lyrics overlay, taskbar lyrics, desktop lyrics app, karaoke lyrics PC, Hindi lyrics in English, Hinglish lyrics, romanized lyrics, LRC lyrics, free lyrics app Windows 11" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<link rel="canonical" href="https://getlirico.pages.dev/" />
+<meta name="theme-color" content="#fff6e6" />
+<meta name="application-name" content="Lirico" />
+<meta property="og:site_name" content="Lirico" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content="Lirico – synced lyrics in your Windows taskbar ♪" />
+<meta property="og:description" content="Live, synced lyrics for Spotify, YouTube and any player, right in your taskbar. Any language, free for Windows." />
 <meta property="og:image" content="https://getlirico.pages.dev/assets/og-hero.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -14,6 +21,12 @@
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://getlirico.pages.dev/assets/og-hero.png" />
+<meta name="twitter:title" content="Lirico – synced lyrics in your Windows taskbar ♪" />
+<meta name="twitter:description" content="Live, synced lyrics for Spotify, YouTube and any player, right in your taskbar. Free for Windows." />
+<link rel="apple-touch-icon" href="assets/favicon.png" />
+<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Lirico", "alternateName": "Lirico synced lyrics for Windows", "description": "Free Windows app that shows synced lyrics while you play Spotify, YouTube or any player: live, line by line, right in your taskbar. Any language, no sign-up.", "url": "https://getlirico.pages.dev/", "applicationCategory": "MultimediaApplication", "applicationSubCategory": "Lyrics", "operatingSystem": "Windows 10, Windows 11", "softwareVersion": "1.3.1", "downloadUrl": "https://getlirico.pages.dev/download?src=schema", "installUrl": "https://getlirico.pages.dev/download?src=schema", "image": "https://getlirico.pages.dev/assets/og-hero.png", "screenshot": "https://getlirico.pages.dev/assets/og-hero.png", "license": "https://opensource.org/licenses/MIT", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "featureList": ["Time-synced lyrics in the Windows taskbar", "Works with Spotify, YouTube, YouTube Music, Apple Music and any Windows media player", "Auto-sync by listening to the music locally", "Lyrics in English letters for Hindi, Urdu, Punjabi, Korean, Russian and more", "Snaps to the taskbar or any app's title bar", "Themes: Classic, Glass, Neon, Pixel, Future, Cutie", "Free, open source, no sign-up, auto-updates"], "sameAs": ["https://github.com/sumitakhuli/Lirico"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I see lyrics while playing Spotify on Windows?", "acceptedAnswer": {"@type": "Answer", "text": "Install Lirico and press play. The synced lyrics show up line by line in your taskbar, so you never have to open Spotify's lyrics view or switch windows."}}, {"@type": "Question", "name": "Does it work with YouTube and other players?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Lirico follows whatever plays in Windows' media controls: YouTube and YouTube Music in Chrome or Edge, Spotify, Apple Music and most other music players."}}, {"@type": "Question", "name": "Can I get Hindi, Urdu, Punjabi or Korean lyrics in English letters?", "acceptedAnswer": {"@type": "Answer", "text": "That's the default. Songs written in another script show in English letters (Hinglish and friends), and one switch brings back the original script."}}, {"@type": "Question", "name": "Is Lirico really free? Is it open source?", "acceptedAnswer": {"@type": "Answer", "text": "Free forever, no account, no ads. The code is open source (MIT) on GitHub."}}, {"@type": "Question", "name": "Which Windows versions are supported?", "acceptedAnswer": {"@type": "Answer", "text": "Windows 10 and Windows 11. It's one small download that starts with Windows and updates itself."}}, {"@type": "Question", "name": "Windows says it's \"protecting\" me??", "acceptedAnswer": {"@type": "Answer", "text": "We're new, not shady. Click More info → Run anyway and you're in."}}, {"@type": "Question", "name": "Are you spying on me?", "acceptedAnswer": {"@type": "Answer", "text": "Nope. Just anonymous counts like \"someone used it for 20 minutes\". Never your songs, never your audio. Turn it off in Settings anytime."}}]}</script>
 <link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -189,6 +202,7 @@
   .count { margin-top: 18px; font-family: var(--hand); font-size: 24px; }
 
   .faq { max-width: 760px; margin: 60px auto 0; }
+  .faq-h { font-size: clamp(32px, 4.4vw, 54px); margin-bottom: 22px; }
   details { padding: 18px 22px; margin-bottom: 14px; }
   summary { cursor: pointer; list-style: none; font-family: var(--pop); font-weight: 800; font-size: 21px; display: flex; justify-content: space-between; gap: 16px; }
   summary::after { content: "+"; transition: transform .2s; } details[open] summary::after { transform: rotate(45deg); }
@@ -228,7 +242,7 @@
 <body>
 <header>
   <div class="wrap bar">
-    <a class="brand" href="#top"><img src="assets/logo.svg" alt="" /><span>lirico<i>.</i></span></a>
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt="Lirico logo" /><span>lirico<i>.</i></span></a>
     <div class="nav-r"><a class="gh" href="https://ko-fi.com/sumitakhuli" target="_blank" rel="noopener" data-pop="popCoffee" aria-label="Buy me a coffee" title="Buy me a coffee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h12.5v4.8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16.5 11h1.3a2.7 2.7 0 0 1 0 5.4h-1.6"/><path d="M8 6.2c0-1 1-1.2 1-2.2M12 6.2c0-1 1-1.2 1-2.2"/><path fill="#ff5fa2" stroke="none" d="M10.25 16.4l-2.1-2a1.25 1.25 0 0 1 1.77-1.77l.33.33.33-.33a1.25 1.25 0 0 1 1.77 1.77z"/></svg></a><a class="gh" href="https://github.com/sumitakhuli/Lirico" target="_blank" rel="noopener" data-pop="popGit" aria-label="Lirico on GitHub" title="Lirico on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a><a class="get" href="/download?src=nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>Download<span class="fr"> · free</span></a></div>
   </div>
 </header>
@@ -236,9 +250,9 @@
 <main id="top">
   <div class="wrap hero">
     <div>
-      <span class="tag">free · Windows 10 &amp; 11</span>
+      <span class="tag">free synced lyrics · Windows 10 &amp; 11</span>
       <h1 data-lyric="Sing along. Skip the tab-hopping.">Sing along.<br />Skip the <span class="hl">tab-hopping.</span></h1>
-      <p class="lede">Play anything. Lirico pops the words <b>right into your taskbar</b>, line by line, <b>right on the beat</b>.</p>
+      <p class="lede">Play anything on Spotify, YouTube or any player. Lirico pops the synced lyrics <b>right into your Windows taskbar</b>, line by line, <b>right on the beat</b>.</p>
       <div class="cta">
         <a class="btn" href="/download?src=hero">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
@@ -319,14 +333,25 @@
     </div>
 
     <div class="faq reveal">
-      <details class="sticker"><summary>Windows says it's "protecting" me??</summary>
-        <p>We're new, not shady. Click <b>More info → Run anyway</b> and you're in.</p></details>
+      <h2 class="faq-h">Questions people <span class="m">actually ask.</span></h2>
+      <details class="sticker"><summary>How do I see lyrics while playing Spotify on Windows?</summary>
+        <p>Install Lirico and press play. The synced lyrics show up line by line in your taskbar, so you never have to open Spotify&#x27;s lyrics view or switch windows.</p></details>
+      <details class="sticker"><summary>Does it work with YouTube and other players?</summary>
+        <p>Yes. Lirico follows whatever plays in Windows&#x27; media controls: YouTube and YouTube Music in Chrome or Edge, Spotify, Apple Music and most other music players.</p></details>
+      <details class="sticker"><summary>Can I get Hindi, Urdu, Punjabi or Korean lyrics in English letters?</summary>
+        <p>That&#x27;s the default. Songs written in another script show in English letters (Hinglish and friends), and one switch brings back the original script.</p></details>
+      <details class="sticker"><summary>Is Lirico really free? Is it open source?</summary>
+        <p>Free forever, no account, no ads. The code is open source (MIT) on GitHub.</p></details>
+      <details class="sticker"><summary>Which Windows versions are supported?</summary>
+        <p>Windows 10 and Windows 11. It&#x27;s one small download that starts with Windows and updates itself.</p></details>
+      <details class="sticker"><summary>Windows says it&#x27;s &quot;protecting&quot; me??</summary>
+        <p>We&#x27;re new, not shady. Click <b>More info → Run anyway</b> and you&#x27;re in.</p></details>
       <details class="sticker"><summary>Are you spying on me?</summary>
-        <p>Nope. Just anonymous counts like "someone used it for 20 minutes". Never your songs. Turn it off in Settings anytime.</p></details>
+        <p>Nope. Just anonymous counts like &quot;someone used it for 20 minutes&quot;. Never your songs, never your audio. Turn it off in Settings anytime.</p></details>
     </div>
   </div>
 
-  <footer>made with ♪ for people who sing at their desks</footer>
+  <footer>made with ♪ for people who sing at their desks<br><span style="font-size:16px">Lirico · free synced lyrics for Windows · works with Spotify, YouTube &amp; any player</span></footer>
 </main>
 
 <dialog class="pop sticker" id="popGit" aria-labelledby="popGitT">

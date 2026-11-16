@@ -40,7 +40,7 @@ export default {
         env.DB.prepare("INSERT INTO downloads (ts, country, src) VALUES (?, ?, ?)")
           .bind(now(), country, clip(url.searchParams.get("src") || "direct", 24)).run()
       );
-      return Response.redirect(EXE_URL, 302);
+      return new Response(null, { status: 302, headers: { location: EXE_URL, "x-robots-tag": "noindex" } });
     }
 
     // --- page views (sent by the site with navigator.sendBeacon)
@@ -80,7 +80,7 @@ export default {
     // --- private dashboard
     if (url.pathname === "/stats") {
       if (!env.STATS_KEY || url.searchParams.get("key") !== env.STATS_KEY) return new Response("Not found", { status: 404 });
-      return new Response(await dashboard(env), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      return new Response(await dashboard(env), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" } });
     }
 
     return env.ASSETS.fetch(request);

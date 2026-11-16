@@ -1,0 +1,40 @@
+# Lirico
+
+> Lirico is a free, open-source (MIT) Windows 10/11 app that shows time-synced lyrics for whatever is playing (Spotify, YouTube, YouTube Music, Apple Music or any player in Windows' media controls), line by line, right in the empty space of the Windows taskbar. It is the simple answer to "how do I see lyrics while playing Spotify on Windows" or "synced lyrics for Windows".
+
+Key facts:
+
+- Platform: Windows 10 and Windows 11 only. One small .exe, no installer wizard, no account, no ads, free forever.
+- Works with: Spotify desktop, YouTube and YouTube Music in Chrome or Edge, Apple Music and other apps that appear in Windows' media controls (SMTC).
+- Placement: docks into the free part of the taskbar (also with auto-hide), snaps onto any app's title bar like a magnet, or floats anywhere. When attached to one app's title bar, it waits in the taskbar while you use other apps.
+- Sync: picks the lyrics version timed to the exact recording, and can listen to the system audio locally (never the microphone, never uploaded) to correct offsets such as music-video intros.
+- Languages: songs in other scripts (Hindi, Urdu, Punjabi, Bengali, Tamil, Telugu, Gujarati, Korean, Russian, Greek and more) are shown in English letters (romanized, e.g. Hinglish) by default; the original script is one setting away.
+- Look: themes Classic (transparent), Glass, Neon, Pixel, Future and Cutie; every font, colour and animation can be customised. Optional previous / play-pause / next buttons on the lyrics.
+- Lyrics source: LRCLIB, an open lyrics database.
+- Privacy: no account; audio is processed on the PC only; only anonymous usage counts are sent (never song names, lyrics or audio), and that can be turned off.
+- Updates: the app updates itself in the background and restarts into the new version when nothing is playing.
+- Price: free. Optional tip jar: https://ko-fi.com/sumitakhuli
+
+## Download
+
+- [Download Lirico for Windows](https://getlirico.pages.dev/download): latest Lirico.exe
+- [All releases and changelog](https://github.com/sumitakhuli/Lirico/releases)
+
+## Docs
+
+- [Website](https://getlirico.pages.dev/): features, demo video and FAQ
+- [README](https://github.com/sumitakhuli/Lirico/blob/main/README.md): features, settings, privacy, running from source
+- [Source code (MIT)](https://github.com/sumitakhuli/Lirico)
+- [Report a bug or a song with wrong lyrics](https://github.com/sumitakhuli/Lirico/issues/new)
+
+## FAQ
+
+- How do I see lyrics while playing Spotify on Windows? Install Lirico and press play; synced lyrics appear line by line in the taskbar, no need to open Spotify's lyrics view.
+- Does it work with YouTube? Yes, YouTube and YouTube Music in Chrome or Edge, plus other players in Windows' media controls.
+- Can I get Hindi or Urdu lyrics in English letters? Yes, that is the default (Hinglish-style romanization); switch to the original script in Settings.
+- Windows SmartScreen warns on first launch: the app is new and not code-signed yet; click "More info" then "Run anyway".
+- Is it open source? Yes, MIT license, Python and PySide6.
+
+## Optional
+
+- [Product Hunt launch](https://www.producthunt.com/posts/lirico)

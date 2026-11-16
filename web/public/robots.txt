@@ -1,0 +1,9 @@
+# Lirico - free synced lyrics for Windows
+User-agent: *
+Allow: /
+# not pages: the download counter, the private stats page and the app's endpoints
+Disallow: /download
+Disallow: /stats
+Disallow: /api/
+
+Sitemap: https://getlirico.pages.dev/sitemap.xml
